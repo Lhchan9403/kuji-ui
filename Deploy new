@@ -1,0 +1,2446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ICHIBAN KUJI · Kuji Club — Pick a ticket. Reveal your prize.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800;900&family=Nunito:wght@400;600;700;800;900&family=Zen+Maru+Gothic:wght@700;900&family=Shippori+Mincho+B1:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ================= KIOSK TOP BAR ================= -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#/">
+      <span class="brand-mark">◆</span>
+      <span class="brand-text">ICHIBAN KUJI<em>KUJI CLUB</em></span>
+    </a>
+    <div class="top-actions">
+      <button class="hud-btn" id="themeBtn" onclick="toggleTheme()" title="Switch style">📖</button>
+      <button class="points-chip" onclick="go('#/wallet')" aria-label="My points">
+        <span class="pt-star">★</span><span id="pointsVal">0</span>
+      </button>
+      <button class="hud-btn" onclick="openMenu()" aria-label="Menu">☰</button>
+      <button class="hud-btn" onclick="openSettings()" aria-label="Settings">⚙</button>
+    </div>
+  </div>
+</header>
+
+<div class="bg-kanji" aria-hidden="true">賞</div>
+<div class="castle-waves" aria-hidden="true">
+  <svg viewBox="0 0 1440 220" preserveAspectRatio="none">
+    <path class="w1" d="M0,130 C240,70 480,190 720,130 C960,70 1200,190 1440,130 L1440,220 L0,220 Z"/>
+    <path class="w2" d="M0,150 C260,100 520,200 780,150 C1040,100 1240,195 1440,150 L1440,220 L0,220 Z"/>
+    <path class="w3" d="M0,175 C300,140 540,210 820,175 C1100,140 1260,205 1440,175 L1440,220 L0,220 Z"/>
+    <path class="w-foam" d="M0,130 C240,70 480,190 720,130 C960,70 1200,190 1440,130"/>
+    <path class="w-foam f2" d="M0,150 C260,100 520,200 780,150 C1040,100 1240,195 1440,150"/>
+  </svg>
+</div>
+<main id="view"></main>
+
+<!-- ================= FOOTER ================= -->
+<footer class="footer">
+  <div class="foot-inner">
+    <span class="brand-mark sm">◆</span>
+    <p>KUJIGACHA · KUJI CLUB — demo redesign concept · Data snapshot from live environment · SGD</p>
+    <button class="foot-link" onclick="resetDemo()">Reset demo data</button>
+  </div>
+</footer>
+
+<!-- ================= BOTTOM NAV (app) ================= -->
+<nav class="bottomnav" aria-label="App">
+  <button class="bnav active" data-nav="home" onclick="go('#/')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg><span>Home</span>
+  </button>
+  <button class="bnav" data-nav="gacha" onclick="go('#/gacha')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="9" r="6"/><path d="M5 21h14M7 15v6M17 15v6"/></svg><span>Gacha</span>
+  </button>
+  <button class="bnav" data-nav="wallet" onclick="go('#/wallet')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M16 12h5v4h-5a2 2 0 0 1 0-4z"/></svg><span>Wallet</span>
+    <i class="dot-badge" id="walletDot"></i>
+  </button>
+</nav>
+
+<!-- ================= MODALS / FX ================= -->
+<div class="overlay" id="overlay" onclick="onOverlay()"></div>
+<aside class="menu-drawer" id="menuDrawer" aria-label="Menu">
+  <div class="md-head">
+    <span class="brand-mark">◆</span>
+    <b>MENU</b>
+    <button class="m-close" onclick="closeModal()" aria-label="Close menu">✕</button>
+  </div>
+  <nav class="md-list">
+    <button class="md-item" onclick="go('#/');closeModal()"><span>🏠</span>Home · Live Boxes</button>
+    <button class="md-item" onclick="go('#/gacha');closeModal()"><span>◉</span>Gacha Machines</button>
+    <button class="md-item" onclick="go('#/wallet');closeModal()"><span>🎫</span>My Wallet</button>
+    <button class="md-item" onclick="howToPlay()"><span>❓</span>How to Play</button>
+    <button class="md-item" onclick="openSettings()"><span>⚙️</span>Settings</button>
+    <button class="md-item danger" onclick="resetDemo();closeModal()"><span>🔄</span>Reset demo data</button>
+  </nav>
+  <div class="md-foot">KUJIGACHA · KUJI CLUB<br><span>無限城 Edition · v1.0</span></div>
+</aside>
+<div class="modal-stage" id="modalStage"></div>
+<canvas id="confetti"></canvas>
+<canvas id="fx"></canvas>
+<div class="kfx" id="kfx"></div>
+<div class="toasts" id="toasts"></div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
+
+# 🎴 KUJIGACHA · Kuji Club — Demon Slayer Edition
+
+An interactive **Ichiban Kuji / Gacha lottery** web prototype, styled after a Korean kiosk machine and powered up with **Demon Slayer breathing-style effects**.
+
+Built with plain HTML / CSS / JS — no build step, no dependencies. Just open and play.
+
+---
+
+## 🔗 Open it right now
+
+**Permanent link (GitHub Pages — always on, works on any device):**
+```
+https://lhchan-kuji.github.io/kuji-ui/
+```
+> Repo: https://github.com/lhchan-kuji/kuji-ui
+
+**Dev link (temporary tunnel, only while the hub runs):**
+run `start-kuji-hub.bat` → it prints the current `trycloudflare.com` URL, plus `http://127.0.0.1:8123` on the host itself.
+
+---
+
+## 🎮 What's inside
+
+### 🏠 Home
+- **Cinematic hero banner** (MyVideo-style) featuring the hottest box, with breadcrumb, fire glow and a "立即開抽 ◆ START" button
+- **Trending poster strip** — swipe through every series
+- **Live box list** — kiosk-faithful banner cards with remaining-ticket counts, price badges, and yellow Start buttons
+
+### 🎁 Box page (Ichiban Kuji)
+- **Prize lineup** with gold A–F rank badges, per-prize remaining bars, SOLD OUT stamps
+- **LAST ONE prize** row + Double Chance entry
+- **Draw flow:** pick ticket numbers on the board (or 🎲 Lucky Dip) → payment panel → **tap-to-flip reveal** → results + confetti on rare pulls
+
+### 🎰 Gacha machines
+- Capsule machine animation: shake → capsule drop → crack open → SSR/SR/R reveal
+
+### 🎫 Wallet
+- Everything you've won, points system, draw history (saved in your browser)
+
+---
+
+## 🔥 The fun part — Demon Slayer effects
+
+- **13 breathing styles trigger randomly on every click:**
+  炎 Flame · 日 Sun · 水 Water · 雷 Thunder · 風 Wind · 岩 Stone · 蟲 Insect · 花 Flower · 霞 Mist · 音 Sound · 戀 Love · 蛇 Serpent · 獸 Beast
+- Fire tongues, water crescents, lightning bolts, tornado blades, butterflies, petals, mist, music notes, hearts, snakes, saw shards…
+- **Cursor trail** — your mouse leaves breathing-style particles (style rotates every few seconds)
+- **Kanji flashes** — 「炎ノ呼吸」「大当たり！」on payments and rare pulls
+- **Sound effects** — WebAudio blips, win chimes, rare fanfare (toggle in Settings)
+- Ambient floating glow motes + animated water waves (Infinity Castle poster vibe)
+
+### 📖✨ Two themes
+Use the top-bar button or ⚙ Settings:
+- **✨ Anime Dark** — Infinity Castle: deep navy, fire glow, water waves
+- **📖 Manga Ink** — hand-drawn comic: paper, ink borders, halftone, "残り少！" bursts
+
+---
+
+## ⚙️ Settings (top-right ⚙ button)
+
+| Setting | Options |
+|---|---|
+| Theme | Anime Dark / Manga Ink |
+| Effects | Full / Lite / Off |
+| Sound | On / Muted |
+| Motion | Standard / Reduced |
+
+☰ Menu: Home · Gacha · Wallet · How to Play · Settings · Reset demo
+
+---
+
+## 🖥️ Run it yourself (Windows)
+
+1. Double-click **`start-kuji-hub.bat`**
+   - Starts the local server (`http://127.0.0.1:8123`)
+   - Starts the public tunnel and prints your share link
+2. Double-click **`stop-kuji-hub.bat`** to shut everything down
+
+> The public URL changes every time the tunnel restarts — send friends the new link each time.
+
+### File map
+```
+kuji-redesign/
+├─ index.html      → page shell
+├─ styles.css      → all themes (anime + manga)
+├─ app.js          → app logic + FX engine + sound
+├─ data.js         → live data snapshot (8 boxes)
+├─ assets/         → series artwork (SVG)
+├─ start-kuji-hub.bat / stop-kuji-hub.bat
+```
+
+---
+
+## 📝 Notes
+
+- Demo project — no real payments; data is a snapshot from a test environment
+- Works on desktop and mobile (bottom tab bar on phones)
+- Currency shown in SGD
+
+/* ============================================================
+   ICHIBAN KUJI · KUJI CLUB — kiosk-faithful redesign
+   Mirrors the reference video: dark navy kiosk screen,
+   banner cards, holographic prize rows, gold rank badges,
+   neon-yellow CTAs, glowing payment panel + sticker band.
+   ============================================================ */
+:root{
+  --bg:#0A0B1C; --bg2:#101230; --panel:#181A3A; --panel2:#1F2250;
+  --line:rgba(255,255,255,.1);
+  --text:#FFFFFF; --muted:#AEB2E0; --faint:#6E72A8;
+  --holo:linear-gradient(100deg,#7C8CF8 0%,#9D7BF5 42%,#C77FEE 74%,#F08BD8 100%);
+  --holo-lite:linear-gradient(100deg,#AEB9FF 0%,#C4A6FF 40%,#E3A4F2 72%,#FFC6EA 100%);
+  --gold-1:#FFE9A0; --gold-2:#E9B949; --gold-3:#B8860B;
+  --cta:#FFE600; --cta-dark:#151508;
+  --green:#8AFF6E; --pink:#FF5C8A; --orange:#FF9F43; --teal:#3FD8C7;
+  --r-lg:16px; --r-md:12px; --r-sm:9px;
+  --shadow-lg:0 24px 60px rgba(3,4,15,.65);
+  --font-d:"Outfit","Nunito",system-ui,sans-serif;
+  --font-b:"Nunito",system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font-b);color:var(--text);min-height:100vh;
+  background:
+    radial-gradient(950px 460px at 50% -10%, rgba(255,150,50,.2), transparent 62%),
+    radial-gradient(700px 420px at 88% 12%, rgba(255,100,30,.1), transparent 60%),
+    radial-gradient(1050px 460px at 50% 108%, rgba(46,150,255,.22), transparent 65%),
+    radial-gradient(rgba(255,255,255,.05) 1.1px, transparent 1.5px),
+    linear-gradient(180deg,#070912,#0B1030 55%,#070A18);
+  background-size:auto,auto,auto,24px 24px,auto;
+  background-attachment:fixed;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;border:none;background:none;color:inherit;cursor:pointer}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:3px solid rgba(255,230,0,.5);outline-offset:2px;border-radius:8px}
+h1,h2,h3,h4,.d{font-family:var(--font-d)}
+main{min-height:70vh;padding-bottom:40px}
+
+/* ================= TOP BAR ================= */
+.topbar{position:sticky;top:0;z-index:60;background:rgba(10,11,28,.92);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line)}
+.topbar-inner{max-width:680px;margin:0 auto;display:flex;align-items:center;gap:12px;
+  height:58px;padding:0 14px}
+.brand{display:flex;align-items:center;gap:9px}
+.brand-mark{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;
+  background:var(--holo);color:#fff;font-size:.95rem;box-shadow:0 4px 14px rgba(157,123,245,.5);
+  transform:rotate(-8deg)}
+.brand-mark.sm{width:28px;height:28px;font-size:.8rem}
+.brand-text{font-family:var(--font-d);font-weight:900;font-size:1.02rem;letter-spacing:1px;line-height:1;
+  display:flex;flex-direction:column}
+.brand-text em{font-style:normal;font-size:.55rem;letter-spacing:4px;color:var(--muted);font-weight:700;margin-top:3px}
+.top-actions{display:flex;gap:8px;margin-left:auto;align-items:center}
+.points-chip{display:flex;align-items:center;gap:6px;background:rgba(255,233,160,.1);
+  border:1px solid rgba(255,233,160,.32);color:var(--gold-1);font-weight:900;font-size:.85rem;
+  padding:8px 14px;border-radius:999px;transition:.2s}
+.points-chip:hover{background:rgba(255,233,160,.18)}
+.hud-btn{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.06);
+  border:1px solid var(--line);display:grid;place-items:center;font-size:1rem;transition:.2s}
+.hud-btn:hover{background:rgba(255,255,255,.14)}
+
+/* ================= KIOSK COLUMN ================= */
+.kiosk{max-width:680px;margin:0 auto;padding:0 14px}
+.kiosk.wide{max-width:880px}
+
+/* instruction bar — like the kiosk header strip */
+.inst-bar{display:flex;align-items:center;gap:12px;margin:14px 0;
+  background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.inst-back{flex-shrink:0;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.09);
+  border:1px solid rgba(255,255,255,.18);display:grid;place-items:center;font-size:1.05rem;font-weight:900;
+  transition:.2s}
+.inst-back:hover{background:var(--cta);color:var(--cta-dark)}
+.inst-text{flex:1;min-width:0;font-weight:800;font-size:.83rem;line-height:1.45;color:#fff}
+.inst-text span{color:var(--cta)}
+.inst-text small{display:block;color:var(--muted);font-weight:700;font-size:.73rem}
+.inst-count{flex-shrink:0;text-align:right;font-family:var(--font-d);font-weight:900;
+  font-size:1.35rem;color:var(--gold-1);line-height:1}
+.inst-count small{display:block;font-size:.58rem;letter-spacing:1.6px;color:var(--muted);font-weight:800;margin-top:2px}
+
+/* tabs */
+.tabs{display:flex;gap:6px;background:rgba(255,255,255,.05);border:1px solid var(--line);
+  border-radius:999px;padding:5px;margin:0 0 14px}
+.tab-pill{flex:1;font-family:var(--font-d);font-weight:900;font-size:.82rem;letter-spacing:2px;
+  padding:11px 0;border-radius:999px;color:var(--muted);text-align:center;transition:.2s}
+.tab-pill.active{background:var(--holo);color:#fff;box-shadow:0 6px 16px rgba(157,123,245,.45)}
+
+/* ================= BOX BANNER CARDS (video list) ================= */
+.klist{display:flex;flex-direction:column;gap:12px}
+.kcard{position:relative;display:block;width:100%;height:158px;border-radius:var(--r-lg);
+  overflow:hidden;text-align:left;border:1px solid rgba(255,255,255,.14);isolation:isolate;
+  transition:transform .25s cubic-bezier(.34,1.3,.64,1),box-shadow .25s;
+  animation:rise .4s cubic-bezier(.34,1.2,.64,1) backwards}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.kcard:hover{transform:translateY(-3px);box-shadow:0 18px 44px rgba(3,4,15,.6)}
+.kcard.featured{height:236px}
+.kcard .art{position:absolute;inset:0;z-index:-1}
+.kcard .art img{width:100%;height:100%;object-fit:cover;transition:transform .5s}
+.kcard:hover .art img{transform:scale(1.04)}
+.kcard .art::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(8,8,24,.12) 34%,rgba(8,8,26,.68) 100%)}
+.kcard .sheen{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.2) 50%,transparent 65%);
+  transform:translateX(-130%);transition:transform .8s}
+.kcard:hover .sheen{transform:translateX(130%)}
+.kc-top{position:absolute;top:11px;left:12px;right:12px;display:flex;gap:8px;align-items:center}
+.kc-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(8,9,24,.72);backdrop-filter:blur(5px);
+  border:1px solid rgba(138,255,110,.45);color:var(--green);font-family:var(--font-d);font-weight:800;
+  font-size:.6rem;letter-spacing:1.8px;padding:5px 11px;border-radius:999px}
+.kc-chip .pulse{width:6px;height:6px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 0 0 rgba(138,255,110,.7);animation:pulse 1.8s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(138,255,110,0)}100%{box-shadow:0 0 0 0 rgba(138,255,110,0)}}
+.kc-chip.gacha{border-color:rgba(255,194,234,.5);color:#FFC6EA}
+.kc-chip.gacha .pulse{background:#FFC6EA;box-shadow:0 0 0 0 rgba(255,198,234,.7)}
+.kc-last{margin-left:auto;background:linear-gradient(100deg,#FF5C8A,#B16DFF);color:#fff;
+  font-family:var(--font-d);font-weight:900;font-size:.6rem;letter-spacing:1.4px;padding:6px 11px;
+  border-radius:999px;box-shadow:0 5px 14px rgba(255,92,138,.55);animation:lastglow 2s ease-in-out infinite}
+@keyframes lastglow{50%{box-shadow:0 5px 22px rgba(255,92,138,.9)}}
+.kc-info{position:absolute;left:14px;bottom:12px;right:170px}
+.kc-title{font-family:var(--font-d);font-weight:900;font-size:1.22rem;line-height:1.12;
+  text-shadow:0 2px 10px rgba(0,0,0,.55)}
+.kc-edition{font-weight:800;font-size:.78rem;color:rgba(255,255,255,.88);
+  text-shadow:0 1px 6px rgba(0,0,0,.5);margin-top:2px}
+.kc-remain{font-family:var(--font-d);font-weight:900;font-size:.85rem;color:#fff;margin-top:6px;
+  text-shadow:0 1px 6px rgba(0,0,0,.5)}
+.kc-remain b{color:var(--gold-1)}
+.kc-side{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.kc-price{display:inline-flex;align-items:center;gap:7px;background:rgba(8,9,24,.85);backdrop-filter:blur(5px);
+  border:1px solid rgba(255,255,255,.22);border-radius:10px;padding:7px 12px;
+  font-family:var(--font-d);font-weight:900;font-size:.9rem}
+.kc-price .dia{color:var(--gold-1);font-size:.75rem}
+.kc-start{background:var(--cta);color:var(--cta-dark);font-family:var(--font-d);font-weight:900;
+  font-size:.85rem;letter-spacing:.5px;padding:11px 30px;border-radius:999px;
+  box-shadow:0 7px 18px rgba(255,230,0,.4);transition:.2s}
+.kc-start:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 11px 26px rgba(255,230,0,.55)}
+
+/* ================= DETAIL HEADER ================= */
+.detail-title{text-align:center;margin:6px 0 4px}
+.detail-title h2{font-size:clamp(1.5rem,4.6vw,2rem);font-weight:900;line-height:1.12;
+  text-shadow:0 2px 14px rgba(124,140,248,.35)}
+.detail-title .edition{color:var(--muted);font-weight:800;font-size:.9rem;margin-top:3px}
+.detail-price{display:inline-flex;align-items:center;gap:7px;margin-top:10px;
+  background:rgba(8,9,24,.85);border:1px solid rgba(255,255,255,.2);border-radius:10px;
+  padding:8px 14px;font-family:var(--font-d);font-weight:900;font-size:.92rem}
+.detail-price .dia{color:var(--gold-1)}
+
+/* ================= PRIZE ROWS (video lineup) ================= */
+.plist{display:grid;grid-template-columns:1fr;gap:11px;padding-left:24px;margin-top:18px}
+.prow{position:relative;display:flex;align-items:center;gap:12px;border-radius:var(--r-lg);
+  padding:11px 14px 11px 30px;
+  background:linear-gradient(100deg,#DCE4FF 0%,#E4D6FF 42%,#F6D4F2 74%,#FFD9EE 100%);
+  box-shadow:0 6px 18px rgba(124,140,248,.3), inset 0 1.5px 0 rgba(255,255,255,.8);
+  overflow:visible;transition:.2s;animation:rise .4s backwards}
+.prow::before{content:"";position:absolute;inset:0;border-radius:var(--r-lg);pointer-events:none;
+  background:
+    radial-gradient(120px 60px at 82% -20%, rgba(255,255,255,.75), transparent 70%),
+    linear-gradient(115deg,transparent 42%,rgba(255,255,255,.35) 50%,transparent 58%)}
+.prow:hover{transform:translateY(-2px);filter:brightness(1.06)}
+.pbadge{position:absolute;left:-22px;top:50%;transform:translateY(-50%);z-index:2;
+  width:46px;height:46px;border-radius:50%;
+  background:radial-gradient(circle at 32% 28%,#FFF6D5,var(--gold-1) 38%,var(--gold-2) 72%,var(--gold-3));
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  box-shadow:0 4px 12px rgba(217,164,25,.55),inset 0 -3px 6px rgba(120,80,0,.4)}
+.pbadge b{font-family:var(--font-d);font-weight:900;font-size:1.18rem;color:#3D2E00;line-height:1}
+.pbadge small{font-size:.44rem;font-weight:900;letter-spacing:.8px;color:#6b4e00}
+.pbadge.pink{background:radial-gradient(circle at 32% 28%,#FFD6E4,#FF8FB1 40%,#FF5C8A 75%,#C2255C);
+  box-shadow:0 4px 14px rgba(255,92,138,.6),inset 0 -3px 6px rgba(120,0,40,.4)}
+.pbadge.pink b{color:#4A0020;font-size:.6rem;letter-spacing:.3px}
+.pbadge.dc{background:radial-gradient(circle at 32% 28%,#E3D4FF,#B16DFF 55%,#7A3FD1);
+  box-shadow:0 4px 14px rgba(177,109,255,.6)}
+.pbadge.dc b{color:#2A0A55;font-size:.5rem}
+.pthumb{flex-shrink:0;width:56px;height:56px;border-radius:12px;display:grid;place-items:center;
+  font-size:1.85rem;background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.7);
+  box-shadow:0 3px 8px rgba(60,40,120,.18)}
+.pinfo{flex:1;min-width:0}
+.pinfo b{display:block;font-size:.9rem;font-weight:900;color:#20224E}
+.pinfo .sub{font-size:.7rem;font-weight:800;color:#5A5E96;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pbar{margin-top:7px;height:6px;width:96px;border-radius:99px;background:rgba(20,16,50,.3);overflow:hidden}
+.pbar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#FF9F43,#FF7A1A)}
+.pqty{flex-shrink:0;text-align:center;margin-left:auto}
+.pqty b{font-family:var(--font-d);font-weight:900;font-size:1.28rem;color:#20224E}
+.pqty span{display:block;font-size:.54rem;font-weight:900;letter-spacing:1.4px;color:#6A6EA0}
+.prow.soldout{filter:grayscale(.6) brightness(.7);opacity:.75}
+.prow.soldout .pbar i{width:0 !important}
+.soldout-stamp{position:absolute;right:60px;top:50%;transform:translateY(-50%) rotate(-8deg);
+  font-family:var(--font-d);font-weight:900;font-size:.66rem;letter-spacing:2px;color:#FFE1E1;
+  border:2px solid rgba(255,225,225,.9);border-radius:7px;padding:2px 9px;background:rgba(60,10,20,.55)}
+.prow.lastone{background:linear-gradient(100deg,#FFD9E6,#F3C6F2 55%,#DCC2FF)}
+.dc-note{grid-column:1/-1;text-align:center;color:var(--faint);font-size:.72rem;font-weight:800;margin-top:2px}
+
+/* watermark like the kiosk */
+.watermark{margin:26px 0 4px;text-align:center;font-family:var(--font-d);font-weight:900;
+  font-size:clamp(2rem,8vw,3.2rem);letter-spacing:1px;color:rgba(255,255,255,.07);
+  user-select:none;pointer-events:none;line-height:1}
+.hint-line{text-align:center;color:var(--muted);font-size:.76rem;font-weight:700;margin-bottom:14px}
+
+/* purchase bar */
+.purchase-bar{position:sticky;bottom:14px;z-index:40;margin-top:8px;
+  background:rgba(12,13,32,.88);backdrop-filter:blur(14px);border:1px solid var(--line);
+  border-radius:18px;padding:12px 14px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow-lg)}
+.purchase-bar .pb-info{flex:1;min-width:0}
+.purchase-bar .pb-info b{font-family:var(--font-d);font-size:1.08rem;font-weight:900}
+.purchase-bar .pb-info span{display:block;font-size:.7rem;color:var(--muted);font-weight:700}
+.big-cta{font-family:var(--font-d);font-weight:900;font-size:1rem;letter-spacing:.6px;
+  background:var(--cta);color:var(--cta-dark);padding:15px 34px;border-radius:999px;
+  box-shadow:0 9px 24px rgba(255,230,0,.4);transition:.2s;white-space:nowrap}
+.big-cta:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(255,230,0,.55)}
+.big-cta:active{transform:scale(.97)}
+.big-cta:disabled{opacity:.4;box-shadow:none;transform:none;cursor:not-allowed}
+.big-cta.block{width:100%}
+
+/* ================= GACHA LINEUP ================= */
+.rarity{font-family:var(--font-d);font-weight:900;letter-spacing:1.6px;font-size:.66rem;
+  padding:5px 12px;border-radius:99px;flex-shrink:0}
+.rarity.ssr{background:linear-gradient(100deg,#FFE9A0,#FF9F43);color:#4A2E00;
+  box-shadow:0 4px 14px rgba(255,159,67,.5)}
+.rarity.sr{background:linear-gradient(100deg,#B16DFF,#FF7AD9);color:#fff}
+.rarity.r{background:rgba(20,16,50,.55);color:#fff}
+
+/* ================= MODALS ================= */
+.overlay{position:fixed;inset:0;background:rgba(4,5,14,.74);backdrop-filter:blur(6px);
+  opacity:0;pointer-events:none;transition:.3s;z-index:80}
+.overlay.open{opacity:1;pointer-events:auto}
+.modal-stage{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:16px;pointer-events:none}
+.modal{pointer-events:auto;width:100%;max-width:480px;max-height:92vh;overflow:hidden auto;border-radius:22px;
+  background:linear-gradient(180deg,#191B40,#12132E);
+  border:1px solid rgba(124,140,248,.4);
+  box-shadow:var(--shadow-lg),0 0 34px rgba(124,140,248,.25);
+  opacity:0;transform:translateY(26px) scale(.96);transition:.34s cubic-bezier(.34,1.25,.64,1)}
+.modal.show{opacity:1;transform:none}
+.modal-head{position:relative;padding:20px 22px 0;text-align:center}
+.modal-head .m-kicker{font-size:.62rem;font-weight:900;letter-spacing:2.6px;color:var(--gold-1)}
+.modal-head h3{font-size:1.28rem;font-weight:900;margin-top:5px}
+.modal-head .m-sub{color:var(--muted);font-size:.8rem;font-weight:700;margin-top:4px}
+.m-close{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:12px;
+  background:rgba(255,255,255,.07);display:grid;place-items:center;font-weight:900;transition:.2s}
+.m-close:hover{background:var(--pink);transform:rotate(90deg)}
+.modal-body{padding:18px 22px 24px}
+
+/* payment panel — glowing holo frame + banner + sticker band */
+.payframe{position:relative;border-radius:18px;padding:2.5px;background:var(--holo-lite);
+  box-shadow:0 0 26px rgba(157,123,245,.55),0 14px 34px rgba(3,4,15,.5)}
+.payframe-in{border-radius:16px;background:linear-gradient(180deg,#20235A,#151738);overflow:hidden}
+.pay-banner{height:110px;overflow:hidden;position:relative}
+.pay-banner img{width:100%;height:100%;object-fit:cover}
+.pay-banner::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,transparent 40%,rgba(21,23,56,.9))}
+.pay-rows{padding:14px 18px 6px}
+.kf-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;font-weight:800}
+.kf-row+.kf-row{border-top:1px dashed rgba(255,255,255,.16)}
+.kf-row .k{color:var(--muted);font-size:.82rem}
+.kf-row .v{font-family:var(--font-d);font-weight:900;font-size:.98rem;text-align:right}
+.kf-row .v.total{color:var(--green);font-size:1.5rem;text-shadow:0 0 18px rgba(138,255,110,.5)}
+.sticker-band{display:flex;align-items:center;gap:9px;padding:10px 14px 14px}
+.sb-smile{flex-shrink:0;width:32px;height:32px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#9BEBFF,#3AA0FF 70%,#2A6FD1);
+  display:grid;place-items:center;font-size:.9rem;box-shadow:0 3px 8px rgba(58,160,255,.5)}
+.sb-wave{flex:1;height:12px;opacity:.6;
+  background:repeating-linear-gradient(135deg,rgba(255,255,255,.4) 0 2px,transparent 2px 9px)}
+.sb-stripe{flex-shrink:0;width:84px;height:16px;border-radius:4px;
+  background:repeating-linear-gradient(45deg,var(--cta) 0 9px,#151515 9px 18px)}
+/* qty stepper */
+.qty-row{display:flex;align-items:center;justify-content:center;gap:16px;margin:4px 0 6px}
+.qty-btn{width:50px;height:50px;border-radius:16px;background:rgba(255,255,255,.07);
+  border:1px solid var(--line);font-size:1.45rem;font-weight:900;transition:.18s}
+.qty-btn:hover{background:var(--cta);color:var(--cta-dark)}
+.qty-val{font-family:var(--font-d);font-weight:900;font-size:2.4rem;min-width:66px;text-align:center;line-height:1}
+.qty-val small{display:block;font-size:.6rem;letter-spacing:2px;color:var(--faint);font-weight:900;margin-top:3px}
+/* ticket board */
+.board{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:12px}
+.slot{aspect-ratio:1;border-radius:8px;display:grid;place-items:center;
+  font-family:var(--font-d);font-weight:800;font-size:.74rem;
+  background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--muted);transition:.15s}
+.slot.avail:hover{border-color:var(--cta);color:#fff;transform:scale(1.08)}
+.slot.picked{background:var(--holo);color:#fff;border-color:transparent;transform:scale(1.06);
+  box-shadow:0 4px 12px rgba(157,123,245,.55)}
+.slot.taken{opacity:.2;cursor:not-allowed;text-decoration:line-through}
+.board-legend{display:flex;gap:14px;justify-content:center;margin-top:11px;font-size:.68rem;font-weight:800;color:var(--muted)}
+.board-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.lucky-dip{display:block;margin:12px auto 0;font-weight:900;font-size:.8rem;letter-spacing:.4px;
+  color:var(--gold-1);border:1px dashed rgba(255,233,160,.45);padding:9px 20px;border-radius:999px;transition:.2s}
+.lucky-dip:hover{background:rgba(255,233,160,.1)}
+.pay-methods{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+.pm{font-size:.64rem;font-weight:900;letter-spacing:.5px;color:var(--muted);
+  border:1px solid var(--line);background:rgba(255,255,255,.05);border-radius:8px;padding:6px 11px}
+.pm.sel{border-color:var(--teal);color:var(--teal);background:rgba(63,216,199,.1)}
+.fine-print{text-align:center;color:var(--faint);font-size:.68rem;font-weight:700;margin-top:11px}
+.btn-ghost-line{display:block;width:100%;margin-top:10px;text-align:center;font-weight:900;font-size:.84rem;
+  color:var(--muted);padding:12px;border-radius:999px;border:1px solid var(--line);transition:.2s}
+.btn-ghost-line:hover{color:#fff;background:rgba(255,255,255,.06)}
+
+/* reveal */
+.reveal-stage{display:flex;flex-direction:column;align-items:center;gap:15px;padding:6px 0 2px}
+.reveal-progress{display:flex;gap:7px}
+.rp-dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.15)}
+.rp-dot.done{background:var(--gold-2)}
+.rp-dot.cur{background:var(--cta);box-shadow:0 0 10px rgba(255,230,0,.7)}
+.reveal-card{position:relative;width:220px;height:300px;perspective:900px;cursor:pointer}
+.rc-inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.4,.1,.2,1)}
+.reveal-card.flip .rc-inner{transform:rotateY(180deg)}
+.rc-face{position:absolute;inset:0;border-radius:18px;backface-visibility:hidden;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px}
+.rc-back{background:linear-gradient(160deg,#0B3FA0,#2E7BF0 45%,#4FB3FF 80%,#C9F2FF);box-shadow:var(--shadow-lg)}
+.rc-back::before{content:"";position:absolute;inset:0;
+  background:linear-gradient(115deg,transparent 32%,rgba(255,255,255,.4) 48%,transparent 62%);
+  animation:shine 2.2s infinite}
+@keyframes shine{0%{transform:translateX(-130%)}55%,100%{transform:translateX(130%)}}
+.rc-back .dia{font-size:2.5rem;color:rgba(255,255,255,.95);text-shadow:0 4px 14px rgba(0,0,0,.3)}
+.rc-back .tt{font-family:var(--font-d);font-weight:900;letter-spacing:3px;color:#fff;font-size:.76rem}
+.rc-back .hint{position:absolute;bottom:15px;font-size:.6rem;font-weight:900;letter-spacing:2px;color:rgba(255,255,255,.9)}
+.rc-front{background:linear-gradient(180deg,#242762,#14163A);border:1px solid rgba(255,233,160,.4);
+  transform:rotateY(180deg);padding:18px}
+.rc-front .pbadge{position:static;transform:none;width:78px;height:78px}
+.rc-front .pbadge b{font-size:2rem}
+.rc-front .p-emoji{font-size:2.5rem}
+.rc-front .p-name{font-weight:900;font-size:.98rem;text-align:center;line-height:1.3}
+.rc-front .p-tier{font-size:.62rem;font-weight:900;letter-spacing:2px;color:var(--gold-1)}
+/* results */
+.result-list{display:flex;flex-direction:column;gap:9px;margin-top:4px}
+.result-item{display:flex;align-items:center;gap:11px;background:rgba(255,255,255,.05);
+  border:1px solid var(--line);border-radius:13px;padding:9px 13px;animation:rise .4s backwards}
+.result-item .mini-badge{flex-shrink:0;width:38px;height:38px;border-radius:50%;
+  background:radial-gradient(circle at 32% 28%,#FFF6D5,var(--gold-1) 38%,var(--gold-2) 72%,var(--gold-3));
+  display:grid;place-items:center;font-family:var(--font-d);font-weight:900;font-size:.95rem;color:#3D2E00}
+.result-item b{font-size:.86rem;display:block}
+.result-item .sub{font-size:.68rem;color:var(--muted);font-weight:700}
+.result-item .tno{margin-left:auto;font-size:.66rem;font-weight:800;color:var(--faint);text-align:right}
+.result-item.hi{border-color:rgba(255,233,160,.55);background:rgba(255,233,160,.07)}
+.rare-call{text-align:center;margin-top:13px;font-weight:900;color:var(--gold-1)}
+
+/* gacha machine */
+.gacha-stage{display:flex;flex-direction:column;align-items:center;padding:4px 0}
+.machine{width:210px;position:relative}
+.m-globe{width:210px;height:210px;border-radius:50%;position:relative;overflow:hidden;
+  background:radial-gradient(circle at 32% 26%,rgba(255,255,255,.35),rgba(255,255,255,.05) 55%),
+  linear-gradient(160deg,rgba(124,140,248,.3),rgba(240,139,216,.2));
+  border:3px solid rgba(255,255,255,.35);box-shadow:inset 0 0 40px rgba(255,255,255,.12),0 16px 40px rgba(3,4,15,.5)}
+.m-globe .caps{position:absolute;width:42px;height:42px;border-radius:50%;
+  background:linear-gradient(180deg,var(--c1) 50%,#fff 50%);border:2px solid rgba(0,0,0,.15);
+  box-shadow:0 3px 6px rgba(0,0,0,.25)}
+.machine.shake .m-globe{animation:shake .6s}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-7px) rotate(-2deg)}40%{transform:translateX(7px) rotate(2deg)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.m-base{margin:-15px auto 0;width:142px;height:70px;border-radius:15px;
+  background:linear-gradient(180deg,#FF5C8A,#B02050);border:2px solid rgba(255,255,255,.25);
+  position:relative;display:grid;place-items:center}
+.m-knob{width:42px;height:42px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff,#cdd3ff 60%,#8e9bff);box-shadow:0 3px 8px rgba(0,0,0,.35)}
+.m-slot{margin:9px auto 0;width:90px;height:24px;border-radius:9px;background:#0A0B1C;border:2px solid rgba(255,255,255,.2)}
+.drop-caps{width:56px;height:56px;border-radius:50%;margin:14px auto 0;cursor:pointer;
+  background:linear-gradient(180deg,var(--c1,#FF5C8A) 50%,#fff 50%);border:3px solid rgba(255,255,255,.5);
+  box-shadow:0 8px 20px rgba(0,0,0,.4);animation:capsdrop .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes capsdrop{from{transform:translateY(-30px) scale(.5);opacity:0}to{transform:none;opacity:1}}
+.drop-caps.open{animation:capsopen .5s forwards}
+@keyframes capsopen{to{transform:scale(1.6);opacity:0}}
+
+/* ================= WALLET ================= */
+.wallet-head{display:flex;align-items:center;gap:14px;margin-top:20px;flex-wrap:wrap}
+.wallet-head h2{font-size:1.55rem;font-weight:900}
+.wallet-head h2 span{color:var(--gold-1)}
+.wallet-stats{display:flex;gap:9px;margin-left:auto}
+.w-chip{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 17px;text-align:center}
+.w-chip b{font-family:var(--font-d);font-weight:900;font-size:1.15rem;display:block;color:var(--gold-1)}
+.w-chip span{font-size:.58rem;font-weight:900;letter-spacing:1.4px;color:var(--faint)}
+.wallet-list{display:flex;flex-direction:column;gap:10px;margin-top:18px;padding-left:24px}
+.wallet-item{position:relative;display:flex;align-items:center;gap:12px;
+  background:linear-gradient(100deg,#DCE4FF 0%,#E4D6FF 42%,#F6D4F2 74%,#FFD9EE 100%);
+  border-radius:var(--r-lg);padding:10px 14px 10px 30px;
+  box-shadow:0 6px 18px rgba(124,140,248,.28), inset 0 1.5px 0 rgba(255,255,255,.75);
+  animation:rise .4s backwards}
+.wallet-item .pbadge{width:40px;height:40px;left:-20px}
+.wallet-item .pbadge b{font-size:.82rem}
+.wallet-item .pthumb{width:48px;height:48px;font-size:1.5rem}
+.wallet-item b{font-size:.88rem;color:#20224E}
+.wallet-item .sub{font-size:.7rem;color:#5A5E96;font-weight:700}
+.wallet-item .when{margin-left:auto;font-size:.64rem;font-weight:800;color:#6A6EA0;text-align:right;flex-shrink:0}
+.wallet-empty{text-align:center;padding:64px 20px;background:rgba(255,255,255,.04);
+  border:1px dashed rgba(255,255,255,.2);border-radius:20px;margin-top:18px}
+.wallet-empty .big{font-size:3rem;display:block;margin-bottom:10px}
+.wallet-empty h3{font-size:1.15rem;margin-bottom:6px}
+.wallet-empty p{color:var(--muted);font-weight:700;font-size:.88rem}
+
+/* ================= FOOTER ================= */
+.footer{margin-top:54px;border-top:1px solid var(--line);padding:26px 0 100px}
+.foot-inner{max-width:680px;margin:0 auto;padding:0 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.footer p{color:var(--faint);font-size:.72rem;font-weight:700;flex:1;min-width:220px;line-height:1.5}
+.foot-link{font-size:.72rem;font-weight:800;color:var(--muted);border:1px solid var(--line);
+  padding:8px 14px;border-radius:999px;transition:.2s}
+.foot-link:hover{color:#fff;background:rgba(255,255,255,.06)}
+
+/* ================= BOTTOM NAV ================= */
+.bottomnav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:60;
+  background:rgba(10,11,28,.94);backdrop-filter:blur(16px);border-top:1px solid var(--line);
+  padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
+.bnav{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0;
+  border-radius:13px;color:var(--faint);font-size:.6rem;font-weight:900;letter-spacing:1px;
+  position:relative;transition:.2s}
+.bnav svg{width:22px;height:22px}
+.bnav.active{color:var(--cta)}
+.dot-badge{position:absolute;top:6px;right:calc(50% - 20px);width:8px;height:8px;border-radius:50%;
+  background:var(--pink);display:none;box-shadow:0 0 8px rgba(255,92,138,.8)}
+.dot-badge.show{display:block}
+
+/* ================= TOASTS / CONFETTI ================= */
+.toasts{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);z-index:120;
+  display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{background:#fff;color:#14142e;font-weight:900;font-size:.84rem;padding:11px 22px;border-radius:999px;
+  box-shadow:var(--shadow-lg);animation:toastin .3s cubic-bezier(.34,1.4,.64,1);white-space:nowrap}
+.toast.bye{animation:toastout .3s forwards}
+@keyframes toastin{from{opacity:0;transform:translateY(14px) scale(.9)}}
+@keyframes toastout{to{opacity:0;transform:translateY(10px)}}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:115}
+.empty-note{text-align:center;color:var(--muted);font-weight:700;padding:46px 0}
+
+/* ================= RESPONSIVE ================= */
+@media (min-width:768px){
+  .plist{grid-template-columns:1fr 1fr;padding-left:0;gap:11px 26px}
+  .plist .prow{margin-left:24px}
+  .wallet-list{padding-left:0}
+  .wallet-item{margin-left:24px}
+}
+@media (max-width:767px){
+  .bottomnav{display:flex}
+  main{padding-bottom:92px}
+  .purchase-bar{bottom:84px}
+  .modal{align-self:end;max-width:none;border-radius:22px 22px 0 0;max-height:94vh}
+  .modal-stage{padding:0;place-items:end stretch}
+  .board{grid-template-columns:repeat(6,1fr)}
+  .kcard{height:148px}
+  .kcard.featured{height:210px}
+  .kc-info{right:140px}
+  .kc-title{font-size:1.08rem}
+  .brand-text em{display:none}
+  .toasts{bottom:110px}
+}
+/* ============================================================
+   ANIME AESTHETIC + DEMON-SLAYER CINEMATIC FX
+   (deep ink + gold, mincho calligraphy, cut-corner game UI,
+    flame tongues / water arcs, kanji flashes, screen shake)
+   ============================================================ */
+#fx{position:fixed;inset:0;pointer-events:none;z-index:130}
+
+/* giant background kanji watermark */
+.bg-kanji{position:fixed;right:-5rem;bottom:-7rem;z-index:0;pointer-events:none;
+  font-family:"Shippori Mincho B1",serif;font-weight:800;font-size:30rem;line-height:1;
+  color:rgba(255,255,255,.028);user-select:none}
+main{position:relative;z-index:1}
+
+/* ================= INFINITY CASTLE water waves ================= */
+.castle-waves{position:fixed;left:0;right:0;bottom:0;z-index:0;pointer-events:none;
+  height:200px;opacity:.85}
+.castle-waves svg{width:100%;height:100%;display:block}
+.castle-waves path{animation:slosh 9s ease-in-out infinite alternate}
+.castle-waves .w1{fill:rgba(46,150,255,.16);filter:drop-shadow(0 0 14px rgba(80,190,255,.35))}
+.castle-waves .w2{fill:rgba(80,190,255,.12);filter:drop-shadow(0 0 12px rgba(80,190,255,.3));
+  animation-duration:7s;animation-delay:-2s}
+.castle-waves .w3{fill:rgba(150,225,255,.1);filter:drop-shadow(0 0 10px rgba(140,220,255,.3));
+  animation-duration:11s;animation-delay:-4s}
+@keyframes slosh{
+  from{transform:translateX(-46px) translateY(0)}
+  50%{transform:translateX(0) translateY(-7px)}
+  to{transform:translateX(46px) translateY(0)}
+}
+body.theme-manga .castle-waves{display:none}
+
+/* anime game-UI buttons: cut corners + glow via drop-shadow */
+.big-cta,.kc-start{
+  border-radius:6px;
+  clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)}
+.big-cta{filter:drop-shadow(0 8px 18px rgba(255,230,0,.35));box-shadow:none}
+.kc-start{filter:drop-shadow(0 5px 12px rgba(255,230,0,.35));box-shadow:none}
+.big-cta:hover{filter:brightness(1.05) drop-shadow(0 12px 26px rgba(255,230,0,.5))}
+
+/* gold gradient display titles — premium anime feel */
+.detail-title h2,.wallet-head h2{
+  background:linear-gradient(180deg,#FFFFFF 10%,#FFE9A0 55%,#E9B949 90%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 2px 10px rgba(10,10,30,.8))}
+.brand-text{background:linear-gradient(180deg,#fff,#FFD98A 70%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.brand-text em{-webkit-text-fill-color:var(--muted)}
+
+/* vertical japanese accent text */
+.vjp{position:absolute;right:2px;top:-6px;writing-mode:vertical-rl;
+  font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:.78rem;
+  letter-spacing:.5em;color:rgba(255,233,160,.5);user-select:none;pointer-events:none}
+.detail-title{position:relative;display:inline-block;padding-right:26px}
+.detail-title-wrap{text-align:center}
+
+/* refined prize thumbs: porcelain tile + gold hairline */
+.pthumb{background:linear-gradient(135deg,#FFFFFF,#E9EDFF);
+  border:1px solid rgba(32,34,78,.3);
+  box-shadow:0 3px 8px rgba(60,40,120,.18), inset 0 0 0 2px rgba(255,255,255,.7);
+  font-size:1.55rem}
+
+/* manga speed-lines on the featured card */
+.kcard.featured::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:repeating-conic-gradient(from 0deg at 80% 22%,rgba(255,255,255,.16) 0deg 2.5deg,transparent 2.5deg 10deg);
+  mix-blend-mode:overlay}
+/* manga halftone corner on every card */
+.kcard .art::before{content:"";position:absolute;right:-30px;bottom:-30px;width:150px;height:150px;z-index:1;
+  background:radial-gradient(rgba(255,255,255,.35) 1.6px, transparent 2px);background-size:11px 11px;
+  transform:rotate(12deg);opacity:.5;pointer-events:none}
+/* comic hard-shadow on card titles */
+.kc-title{text-shadow:2px 2px 0 rgba(10,10,30,.5),0 2px 10px rgba(0,0,0,.55)}
+
+/* japanese tags */
+.jp{font-family:"Zen Maru Gothic",var(--font-d);font-weight:900}
+
+/* reveal card back (breathing-style flow) */
+.rc-back .flow{position:absolute;inset:-45%;opacity:.55;
+  background:repeating-linear-gradient(115deg,rgba(255,255,255,.3) 0 10px,transparent 10px 26px);
+  animation:flowmove 3.2s linear infinite}
+@keyframes flowmove{to{transform:translateX(18%) rotate(4deg)}}
+
+/* action burst star behind revealed rank badge */
+.rc-front .burst{position:absolute;width:170px;height:170px;z-index:0;
+  background:radial-gradient(circle,var(--gold-1) 0 26%,transparent 27%),
+  repeating-conic-gradient(from 0deg,rgba(255,233,160,.9) 0deg 9deg,transparent 9deg 18deg);
+  -webkit-mask:radial-gradient(circle,#000 0 64%,transparent 65%);
+  mask:radial-gradient(circle,#000 0 64%,transparent 65%);
+  animation:burstpop .55s cubic-bezier(.34,1.56,.64,1),burstspin 14s linear infinite}
+@keyframes burstpop{from{transform:scale(.2) rotate(-30deg);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes burstspin{to{transform:rotate(360deg)}}
+.rc-front>*{position:relative;z-index:1}
+
+/* DC row */
+.prow.dc-row{background:linear-gradient(100deg,#E3D4FF,#D3B8FF 55%,#C4A6FF)}
+.dc-note{display:none}
+.prow .rarity{margin-left:auto}
+
+/* ================= KANJI FLASH (呼吸の型 / 大当たり) ================= */
+.kfx{position:fixed;inset:0;z-index:140;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;pointer-events:none;opacity:0}
+.kfx.show{opacity:1}
+.kfx-main{font-family:"Shippori Mincho B1",serif;font-weight:800;line-height:1.1;
+  font-size:clamp(4rem,19vw,8.5rem);letter-spacing:.06em;white-space:nowrap;
+  background:linear-gradient(180deg,#FFFFFF 5%,#FFD23F 55%,#FF5722 95%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 30px rgba(255,110,30,.8)) drop-shadow(0 4px 6px rgba(0,0,0,.5));
+  animation:kfxpop 1s cubic-bezier(.2,.9,.3,1) forwards}
+.kfx.fx-water .kfx-main{
+  background:linear-gradient(180deg,#FFFFFF 5%,#9BEBFF 55%,#2E7BF0 95%);
+  -webkit-background-clip:text;background-clip:text;
+  filter:drop-shadow(0 0 30px rgba(63,167,255,.8)) drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+.kfx.fx-thunder .kfx-main{
+  background:linear-gradient(180deg,#FFFFFF 5%,#FFF3A8 45%,#FFB800 95%);
+  -webkit-background-clip:text;background-clip:text;
+  filter:drop-shadow(0 0 30px rgba(255,214,40,.9)) drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+.kfx.fx-wind .kfx-main{
+  background:linear-gradient(180deg,#FFFFFF 5%,#A8F5C8 50%,#2FA86B 95%);
+  -webkit-background-clip:text;background-clip:text;
+  filter:drop-shadow(0 0 30px rgba(80,230,160,.85)) drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+.kfx.fx-sun .kfx-main{
+  background:linear-gradient(180deg,#FFFFFF 5%,#FFB199 50%,#E0230A 95%);
+  -webkit-background-clip:text;background-clip:text;
+  filter:drop-shadow(0 0 30px rgba(255,60,30,.85)) drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+.kfx.fx-stone .kfx-main{
+  background:linear-gradient(180deg,#FFFFFF 5%,#E5D5C0 50%,#8A7358 95%);
+  -webkit-background-clip:text;background-clip:text;
+  filter:drop-shadow(0 0 30px rgba(190,160,120,.85)) drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+.kfx.fx-insect .kfx-main{
+  background:linear-gradient(180deg,#FFFFFF 5%,#E8C8FF 50%,#8E4FE0 95%);
+  -webkit-background-clip:text;background-clip:text;
+  filter:drop-shadow(0 0 30px rgba(170,110,255,.85)) drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+.kfx.fx-flower .kfx-main{
+  background:linear-gradient(180deg,#FFFFFF 5%,#FFD0E6 50%,#F0609A 95%);
+  -webkit-background-clip:text;background-clip:text;
+  filter:drop-shadow(0 0 30px rgba(255,120,180,.85)) drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+.kfx.fx-mist .kfx-main{
+  background:linear-gradient(180deg,#FFFFFF 5%,#E8FFFB 50%,#6FC4B8 95%);
+  -webkit-background-clip:text;background-clip:text;
+  filter:drop-shadow(0 0 30px rgba(170,240,230,.8)) drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+.kfx.fx-sound .kfx-main{
+  background:linear-gradient(180deg,#FFFFFF 5%,#FFE98A 50%,#E09F00 95%);
+  -webkit-background-clip:text;background-clip:text;
+  filter:drop-shadow(0 0 30px rgba(255,210,80,.85)) drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+.kfx.fx-love .kfx-main{
+  background:linear-gradient(180deg,#FFFFFF 5%,#FFC2DA 50%,#FF4F93 95%);
+  -webkit-background-clip:text;background-clip:text;
+  filter:drop-shadow(0 0 30px rgba(255,110,170,.85)) drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+.kfx.fx-serpent .kfx-main{
+  background:linear-gradient(180deg,#FFFFFF 5%,#DCD2FF 50%,#6A4FE0 95%);
+  -webkit-background-clip:text;background-clip:text;
+  filter:drop-shadow(0 0 30px rgba(150,120,255,.85)) drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+.kfx.fx-beast .kfx-main{
+  background:linear-gradient(180deg,#FFFFFF 5%,#B8FFF4 50%,#1FA896 95%);
+  -webkit-background-clip:text;background-clip:text;
+  filter:drop-shadow(0 0 30px rgba(90,235,215,.85)) drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+.kfx.fx-gold .kfx-main{
+  background:linear-gradient(180deg,#FFFFFF 5%,#FFE9A0 50%,#D9A419 95%);
+  -webkit-background-clip:text;background-clip:text;
+  filter:drop-shadow(0 0 34px rgba(255,210,63,.85)) drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+.kfx-sub{margin-top:8px;font-family:var(--font-d);font-weight:900;font-size:.82rem;
+  letter-spacing:.55em;color:rgba(255,255,255,.92);text-shadow:0 2px 8px rgba(0,0,0,.6);
+  opacity:0;animation:kfxsub .45s .16s forwards}
+@keyframes kfxpop{0%{opacity:0;transform:scale(.55) skewX(-8deg)}
+  16%{opacity:1;transform:scale(1.14) skewX(0)}
+  26%{transform:scale(1)}
+  72%{opacity:1;transform:scale(1)}
+  100%{opacity:0;transform:scale(1.08) translateY(-16px)}}
+@keyframes kfxsub{to{opacity:.95}}
+
+/* screen shake on big moments */
+@keyframes uishake{0%,100%{transform:none}20%{transform:translate(4px,-3px)}
+  40%{transform:translate(-4px,3px)}60%{transform:translate(3px,2px)}80%{transform:translate(-2px,-1px)}}
+body.shake main,body.shake .topbar{animation:uishake .32s}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+  .rc-back .flow,.rc-front .burst{animation:none}
+  body.shake main,body.shake .topbar{animation:none}
+}
+
+/* ============================================================
+   📖 MANGA INK THEME — hand-drawn comic style
+   paper · ink borders · hard shadows · halftone · sfx bursts
+   ============================================================ */
+body.theme-manga{
+  --bg:#F6F1E4; --bg2:#EFE8D4; --panel:#FFFFFF; --panel2:#FAF5E9;
+  --line:rgba(20,20,20,.9); --text:#161616; --muted:#4D4839; --faint:#8A8471;
+  background:
+    radial-gradient(rgba(20,20,20,.13) 1.1px, transparent 1.5px),
+    linear-gradient(180deg,#F8F3E7,#F0E9D6);
+  background-size:15px 15px,auto;
+}
+body.theme-manga .bg-kanji{color:rgba(20,20,20,.045)}
+body.theme-manga .topbar{background:rgba(255,253,246,.95);border-bottom:3px solid #161616}
+body.theme-manga .brand-mark{background:#FFE600;color:#161616;border:2.5px solid #161616;
+  box-shadow:3px 3px 0 #161616}
+body.theme-manga .brand-text{background:none;-webkit-text-fill-color:#161616;color:#161616}
+body.theme-manga .brand-text em{-webkit-text-fill-color:#5A5546}
+body.theme-manga .hud-btn,body.theme-manga .points-chip{
+  background:#fff;border:2.5px solid #161616;color:#161616;box-shadow:2.5px 2.5px 0 #161616}
+body.theme-manga .hud-btn:hover,body.theme-manga .points-chip:hover{background:#FFE600}
+body.theme-manga .pt-star{color:#E0230A}
+
+/* instruction bar → manga caption box */
+body.theme-manga .inst-bar{background:#fff;border:2.5px solid #161616;border-radius:8px;
+  box-shadow:4px 4px 0 #161616}
+body.theme-manga .inst-text{color:#161616}
+body.theme-manga .inst-text span{color:#E0230A}
+body.theme-manga .inst-text small{color:#5A5546}
+body.theme-manga .inst-back{background:#FFE600;border:2.5px solid #161616;color:#161616}
+body.theme-manga .inst-back:hover{background:#161616;color:#FFE600}
+body.theme-manga .inst-count{color:#161616}
+body.theme-manga .inst-count small{color:#5A5546}
+
+/* tabs → ink switch */
+body.theme-manga .tabs{background:#fff;border:2.5px solid #161616;border-radius:10px;box-shadow:4px 4px 0 #161616}
+body.theme-manga .tab-pill{color:#6A6552}
+body.theme-manga .tab-pill.active{background:#161616;color:#FFE600;box-shadow:none}
+
+/* box cards → manga panels */
+body.theme-manga .kcard{border:3px solid #161616;border-radius:8px;background:#fff;
+  box-shadow:7px 7px 0 #161616}
+body.theme-manga .kcard:hover{transform:translate(-2px,-2px) rotate(-.4deg);
+  box-shadow:10px 10px 0 #161616}
+body.theme-manga .kcard .sheen{display:none}
+body.theme-manga .kcard.featured::before{
+  background:repeating-conic-gradient(from 0deg at 80% 22%,rgba(20,20,20,.16) 0deg 2.5deg,transparent 2.5deg 10deg);
+  mix-blend-mode:multiply}
+body.theme-manga .kcard .art::before{background:radial-gradient(rgba(20,20,20,.4) 1.4px,transparent 1.8px);
+  background-size:9px 9px;opacity:.6}
+body.theme-manga .kc-chip{background:#161616;color:#FFE600;border:none;box-shadow:2px 2px 0 rgba(20,20,20,.35)}
+body.theme-manga .kc-chip .pulse{background:#FFE600;box-shadow:none;animation:none}
+body.theme-manga .kc-chip.gacha{color:#FF9FC0}
+body.theme-manga .kc-last{background:#FF4D4D;border:2.5px solid #161616;box-shadow:2px 2px 0 #161616;animation:none}
+body.theme-manga .kc-price{background:#fff;border:2.5px solid #161616;color:#161616;
+  box-shadow:2.5px 2.5px 0 #161616;border-radius:6px}
+body.theme-manga .kc-price .dia{color:#E0230A}
+body.theme-manga .kc-start{background:#FFE600;color:#161616;border:3px solid #161616;
+  border-radius:6px;clip-path:none;filter:none;box-shadow:3px 3px 0 #161616;font-style:italic}
+body.theme-manga .kc-start:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 #161616}
+body.theme-manga .kc-title{font-family:"Shippori Mincho B1",serif;letter-spacing:.02em}
+.sfx-burst{display:none}
+body.theme-manga .sfx-burst{display:grid;place-items:center;position:absolute;top:42px;right:12px;
+  width:80px;height:80px;z-index:2;background:#FFE600;color:#161616;
+  font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:.78rem;letter-spacing:.05em;
+  clip-path:polygon(50% 0%,61% 12%,75% 7%,79% 21%,93% 25%,89% 39%,100% 50%,89% 61%,93% 75%,79% 79%,75% 93%,61% 88%,50% 100%,39% 88%,25% 93%,21% 79%,7% 75%,11% 61%,0% 50%,11% 39%,7% 25%,21% 21%,25% 7%,39% 12%);
+  filter:drop-shadow(2.5px 2.5px 0 #161616);
+  animation:sfxpulse 1.5s ease-in-out infinite}
+@keyframes sfxpulse{50%{transform:rotate(9deg) scale(1.09)}}
+
+/* prize rows → ink panels */
+body.theme-manga .prow{background:#fff;border:2.5px solid #161616;border-radius:8px;
+  box-shadow:4px 4px 0 #161616}
+body.theme-manga .prow::before{display:none}
+body.theme-manga .prow:hover{transform:translate(-1px,-1px);box-shadow:6px 6px 0 #161616;filter:none}
+body.theme-manga .prow.lastone{background:#FFD9E0}
+body.theme-manga .prow.dc-row{background:#E9DEFF}
+body.theme-manga .prow.soldout{filter:grayscale(.7) brightness(.92);opacity:.8}
+body.theme-manga .soldout-stamp{color:#E0230A;border-color:#E0230A;background:rgba(255,255,255,.85)}
+body.theme-manga .pthumb{background:#FAF5E9;border:2px solid #161616;box-shadow:none}
+body.theme-manga .pinfo b{color:#161616;text-shadow:none}
+body.theme-manga .pinfo .sub{color:#5A5546;text-shadow:none}
+body.theme-manga .pbar{background:rgba(20,20,20,.16)}
+body.theme-manga .pqty b{color:#161616;text-shadow:none}
+body.theme-manga .pqty span{color:#6A6552}
+body.theme-manga .watermark{color:rgba(20,20,20,.08);font-family:"Shippori Mincho B1",serif}
+body.theme-manga .hint-line{color:#5A5546}
+body.theme-manga .detail-title h2{background:none;-webkit-text-fill-color:#161616;color:#161616;filter:none;
+  font-family:"Shippori Mincho B1",serif}
+body.theme-manga .vjp{color:rgba(20,20,20,.45)}
+body.theme-manga .detail-price{background:#fff;border:2.5px solid #161616;color:#161616;
+  box-shadow:3px 3px 0 #161616;border-radius:6px}
+body.theme-manga .detail-price .dia{color:#E0230A}
+body.theme-manga .purchase-bar{background:#FFFDF6;border:3px solid #161616;border-radius:10px;
+  box-shadow:6px 6px 0 #161616}
+body.theme-manga .purchase-bar .pb-info b{color:#161616}
+body.theme-manga .purchase-bar .pb-info span{color:#5A5546}
+body.theme-manga .big-cta{background:#FFE600;color:#161616;border:3px solid #161616;border-radius:8px;
+  clip-path:none;filter:none;box-shadow:4px 4px 0 #161616;font-style:italic}
+body.theme-manga .big-cta:hover{transform:translate(-1px,-1px);filter:none;box-shadow:6px 6px 0 #161616}
+body.theme-manga .big-cta:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #161616}
+body.theme-manga .big-cta:disabled{opacity:.4}
+
+/* modals → paper panels */
+body.theme-manga .overlay{background:rgba(30,25,15,.5)}
+body.theme-manga .modal{background:#FFFDF6;border:3px solid #161616;box-shadow:9px 9px 0 #161616}
+body.theme-manga .modal-head h3{color:#161616;font-family:"Shippori Mincho B1",serif}
+body.theme-manga .modal-head .m-kicker{color:#B8860B}
+body.theme-manga .modal-head .m-sub{color:#5A5546}
+body.theme-manga .m-close{background:#fff;border:2.5px solid #161616;color:#161616}
+body.theme-manga .m-close:hover{background:#FF4D4D;color:#fff;transform:rotate(90deg)}
+body.theme-manga .qty-btn{background:#fff;border:2.5px solid #161616;color:#161616}
+body.theme-manga .qty-btn:hover{background:#FFE600;color:#161616}
+body.theme-manga .qty-val{color:#161616}
+body.theme-manga .qty-val small{color:#8A8471}
+body.theme-manga .slot{background:#fff;border:2px solid #161616;color:#161616}
+body.theme-manga .slot.avail:hover{background:#FFE600;color:#161616}
+body.theme-manga .slot.picked{background:#161616;color:#FFE600;box-shadow:2px 2px 0 rgba(20,20,20,.35)}
+body.theme-manga .board-legend{color:#5A5546}
+body.theme-manga .lucky-dip{color:#161616;border:2px dashed #161616}
+body.theme-manga .lucky-dip:hover{background:#FFF3C4}
+body.theme-manga .payframe{background:#161616;padding:3px;box-shadow:6px 6px 0 rgba(20,20,20,.3)}
+body.theme-manga .payframe-in{background:#fff}
+body.theme-manga .kf-row .k{color:#5A5546}
+body.theme-manga .kf-row .v{color:#161616}
+body.theme-manga .kf-row .v.total{color:#0A7D3B;text-shadow:none}
+body.theme-manga .kf-row+.kf-row{border-top:2px dashed rgba(20,20,20,.22)}
+body.theme-manga .pm{color:#5A5546;border:2px solid #161616;background:#fff}
+body.theme-manga .pm.sel{background:#161616;color:#FFE600}
+body.theme-manga .fine-print{color:#8A8471}
+body.theme-manga .btn-ghost-line{color:#161616;border:2.5px solid #161616}
+body.theme-manga .btn-ghost-line:hover{background:#fff}
+body.theme-manga .rc-front{background:#FFFDF6;border:3px solid #161616}
+body.theme-manga .rc-front .p-name{color:#161616}
+body.theme-manga .rc-front .p-tier{color:#B8860B}
+body.theme-manga .rp-dot{background:rgba(20,20,20,.18)}
+body.theme-manga .rp-dot.cur{background:#E0230A;box-shadow:none}
+body.theme-manga .rp-dot.done{background:#B8860B}
+body.theme-manga .result-item{background:#fff;border:2.5px solid #161616;box-shadow:3px 3px 0 #161616}
+body.theme-manga .result-item .sub{color:#5A5546}
+body.theme-manga .result-item .tno{color:#8A8471}
+body.theme-manga .result-item.hi{background:#FFF3C4;border-color:#161616}
+body.theme-manga .rare-call{color:#B8860B}
+
+/* gacha machine on paper */
+body.theme-manga .m-globe{border-color:#161616;background:radial-gradient(circle at 32% 26%,rgba(255,255,255,.8),rgba(255,255,255,.15) 55%),#F3EDDD}
+body.theme-manga .m-base{border-color:#161616}
+body.theme-manga .m-slot{border-color:#161616}
+
+/* wallet */
+body.theme-manga .wallet-head h2{background:none;-webkit-text-fill-color:#161616;color:#161616;
+  font-family:"Shippori Mincho B1",serif}
+body.theme-manga .wallet-head h2 span{color:#E0230A}
+body.theme-manga .w-chip{background:#fff;border:2.5px solid #161616;box-shadow:3px 3px 0 #161616}
+body.theme-manga .w-chip b{color:#161616}
+body.theme-manga .w-chip span{color:#8A8471}
+body.theme-manga .wallet-item{background:#fff;border:2.5px solid #161616;box-shadow:4px 4px 0 #161616}
+body.theme-manga .wallet-item b{color:#161616;text-shadow:none}
+body.theme-manga .wallet-item .sub{color:#5A5546}
+body.theme-manga .wallet-item .when{color:#8A8471}
+body.theme-manga .wallet-empty{background:#fff;border:2.5px dashed #161616}
+body.theme-manga .wallet-empty h3{color:#161616}
+body.theme-manga .wallet-empty p{color:#5A5546}
+
+/* footer / nav / toast */
+body.theme-manga .footer{border-top:3px solid #161616;background:none}
+body.theme-manga .footer p{color:#5A5546}
+body.theme-manga .foot-link{color:#161616;border:2.5px solid #161616;background:#fff;box-shadow:2.5px 2.5px 0 #161616}
+body.theme-manga .foot-link:hover{background:#FFE600}
+body.theme-manga .bottomnav{background:rgba(255,253,246,.96);border-top:3px solid #161616}
+body.theme-manga .bnav{color:#8A8471}
+body.theme-manga .bnav.active{color:#161616}
+body.theme-manga .toast{background:#161616;color:#FFE600;border:2.5px solid #161616;
+  box-shadow:3px 3px 0 rgba(20,20,20,.35)}
+body.theme-manga .empty-note{color:#5A5546}
+body.theme-manga .rarity.ssr{border:2px solid #161616}
+body.theme-manga .rarity.sr{border:2px solid #161616}
+body.theme-manga .rarity.r{background:#161616;color:#fff}
+
+/* ============================================================
+   MYVIDEO-STYLE HERO + POSTER STRIP (streaming-site layout)
+   ============================================================ */
+.mv-hero{position:relative;border-radius:20px;overflow:hidden;margin:2px 0 20px;
+  min-height:310px;display:flex;align-items:flex-end;cursor:pointer;isolation:isolate;
+  border:1px solid rgba(255,255,255,.14);animation:rise .45s backwards}
+.mv-art{position:absolute;inset:0;z-index:-1}
+.mv-art img{width:100%;height:100%;object-fit:cover;transform:scale(1.07);
+  transition:transform 6s ease}
+.mv-hero:hover .mv-art img{transform:scale(1.13)}
+.mv-hero::after{content:"";position:absolute;inset:0;
+  background:
+    linear-gradient(90deg,rgba(5,6,16,.94) 6%,rgba(5,6,16,.6) 45%,rgba(5,6,16,.12) 78%),
+    linear-gradient(0deg,rgba(5,6,16,.88),transparent 55%)}
+.mv-fire{position:absolute;right:-70px;top:-90px;width:400px;height:400px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,110,30,.4),transparent 62%);filter:blur(12px);z-index:-1;
+  animation:firepulse 4s ease-in-out infinite}
+@keyframes firepulse{50%{opacity:.6;transform:scale(1.08)}}
+.mv-share{position:absolute;top:14px;right:14px;z-index:2;width:38px;height:38px;border-radius:12px;
+  background:rgba(8,9,24,.72);border:1px solid rgba(255,255,255,.22);display:grid;place-items:center;
+  font-size:1.05rem;backdrop-filter:blur(5px);transition:.2s}
+.mv-share:hover{background:var(--cta);color:var(--cta-dark);transform:rotate(8deg) scale(1.1)}
+.mv-content{position:relative;padding:26px 26px 24px;max-width:78%}
+.mv-crumb{font-size:.72rem;font-weight:800;letter-spacing:1px;color:var(--muted);margin-bottom:11px}
+.mv-crumb b{color:var(--cta)}
+.mv-title{font-size:clamp(1.5rem,4.6vw,2.35rem);font-weight:900;line-height:1.14;
+  text-shadow:0 3px 18px rgba(0,0,0,.65)}
+.mv-title .jp{display:block;margin-top:8px;font-size:.44em;letter-spacing:.42em;color:var(--gold-1);
+  font-family:"Zen Maru Gothic",sans-serif;text-shadow:0 0 14px rgba(255,150,50,.6)}
+.mv-desc{margin-top:11px;color:#D6D8F2;font-weight:700;font-size:.88rem;line-height:1.6;max-width:54ch}
+.mv-cta{margin-top:17px;display:inline-flex;align-items:center;gap:8px;
+  background:var(--cta);color:var(--cta-dark);font-family:var(--font-d);font-weight:900;
+  font-size:.95rem;letter-spacing:.5px;padding:13px 28px;border-radius:8px;
+  clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);
+  filter:drop-shadow(0 8px 18px rgba(255,230,0,.38));transition:.2s}
+.mv-cta:hover{transform:translateY(-2px) scale(1.02)}
+
+/* poster strip */
+.mv-strip-head{font-family:var(--font-d);font-weight:900;font-size:1.05rem;margin:4px 0 12px;
+  display:flex;align-items:center;gap:8px}
+.mv-strip-head .jp{font-size:.62rem;letter-spacing:.3em;color:#E0230A;
+  border:1.5px solid #E0230A;border-radius:6px;padding:3px 8px}
+.mv-strip{display:flex;gap:12px;overflow-x:auto;padding:4px 2px 14px;
+  scroll-snap-type:x mandatory;scrollbar-width:none}
+.mv-strip::-webkit-scrollbar{display:none}
+.mv-card{flex:0 0 148px;scroll-snap-align:start;cursor:pointer;
+  transition:transform .22s;animation:rise .4s backwards}
+.mv-card:hover{transform:translateY(-5px)}
+.mv-poster{position:relative;aspect-ratio:2/2.85;border-radius:13px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.16);box-shadow:0 10px 26px rgba(3,4,15,.45)}
+.mv-poster img{width:100%;height:100%;object-fit:cover;transition:transform .5s}
+.mv-card:hover .mv-poster img{transform:scale(1.07)}
+.mv-poster::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(0deg,rgba(5,6,16,.66),transparent 46%)}
+.mv-tag{position:absolute;top:8px;left:8px;z-index:2;background:#E0230A;color:#fff;
+  font-family:var(--font-d);font-weight:900;font-size:.58rem;letter-spacing:1.4px;
+  padding:4px 9px;border-radius:6px;box-shadow:0 4px 10px rgba(224,35,10,.5)}
+.mv-card b{display:block;font-size:.84rem;margin-top:9px;line-height:1.2}
+.mv-card .mv-left{display:block;font-size:.7rem;color:var(--muted);font-weight:800;margin-top:3px}
+.mv-list-head{font-family:var(--font-d);font-weight:900;letter-spacing:2.4px;font-size:.82rem;
+  color:var(--muted);margin:20px 0 13px;display:flex;align-items:center;gap:12px}
+.mv-list-head::before{content:"◆";color:var(--gold-2)}
+.mv-list-head::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* manga overrides */
+body.theme-manga .mv-hero{border:3px solid #161616;box-shadow:7px 7px 0 #161616;border-radius:8px}
+body.theme-manga .mv-hero::after{background:
+  linear-gradient(90deg,rgba(255,253,246,.96) 8%,rgba(255,253,246,.78) 46%,rgba(255,253,246,.14) 80%)}
+body.theme-manga .mv-fire{display:none}
+body.theme-manga .mv-title{color:#161616;text-shadow:none;font-family:"Shippori Mincho B1",serif}
+body.theme-manga .mv-title .jp{color:#E0230A;text-shadow:none}
+body.theme-manga .mv-crumb{color:#5A5546}
+body.theme-manga .mv-crumb b{color:#E0230A}
+body.theme-manga .mv-desc{color:#3A362A}
+body.theme-manga .mv-cta{border:3px solid #161616;clip-path:none;box-shadow:4px 4px 0 #161616;
+  filter:none;font-style:italic}
+body.theme-manga .mv-share{background:#fff;border:2.5px solid #161616;color:#161616}
+body.theme-manga .mv-share:hover{background:#FFE600;color:#161616}
+body.theme-manga .mv-poster{border:2.5px solid #161616;box-shadow:4px 4px 0 #161616;border-radius:8px}
+body.theme-manga .mv-card b{color:#161616}
+body.theme-manga .mv-card .mv-left{color:#5A5546}
+body.theme-manga .mv-list-head{color:#161616}
+body.theme-manga .mv-list-head::after{background:#161616;height:2px}
+
+@media (max-width:767px){
+  .mv-hero{min-height:250px;border-radius:16px}
+  .mv-content{max-width:100%;padding:20px 18px 18px}
+  .mv-card{flex-basis:126px}
+}
+
+/* ============================================================
+   MENU DRAWER + SETTINGS PANEL
+   ============================================================ */
+.menu-drawer{position:fixed;top:0;left:0;bottom:0;width:min(320px,84vw);z-index:95;
+  background:linear-gradient(180deg,#191B40,#12132E);border-right:1px solid var(--line);
+  transform:translateX(-105%);transition:transform .34s cubic-bezier(.65,.05,.36,1);
+  display:flex;flex-direction:column;box-shadow:24px 0 60px rgba(3,4,15,.5)}
+.menu-drawer.open{transform:none}
+.md-head{display:flex;align-items:center;gap:10px;padding:18px;border-bottom:1px solid var(--line)}
+.md-head b{font-family:var(--font-d);letter-spacing:2.5px;font-size:1rem}
+.md-head .m-close{position:static;margin-left:auto}
+.md-list{display:flex;flex-direction:column;gap:5px;padding:14px}
+.md-item{display:flex;align-items:center;gap:13px;padding:13px 14px;border-radius:12px;
+  font-weight:800;font-size:.95rem;text-align:left;color:var(--text);transition:.18s}
+.md-item:hover{background:rgba(255,255,255,.07);transform:translateX(4px)}
+.md-item span{font-size:1.15rem;width:24px;text-align:center}
+.md-item.danger{color:#FF8FA8}
+.md-foot{margin-top:auto;padding:18px;border-top:1px solid var(--line);
+  font-weight:800;font-size:.8rem;letter-spacing:1px;line-height:1.5}
+.md-foot span{color:var(--faint);font-size:.68rem;letter-spacing:2.4px}
+body.theme-manga .menu-drawer{background:#FFFDF6;border-right:3px solid #161616;
+  box-shadow:8px 0 0 rgba(20,20,20,.25)}
+body.theme-manga .md-head{border-bottom:2.5px solid #161616}
+body.theme-manga .md-head b{color:#161616}
+body.theme-manga .md-item{color:#161616}
+body.theme-manga .md-item:hover{background:#FFF3C4}
+body.theme-manga .md-item.danger{color:#E0230A}
+body.theme-manga .md-foot{border-top:2.5px solid #161616;color:#161616}
+
+/* settings rows */
+.set-label{font-size:.66rem;font-weight:900;letter-spacing:2.2px;color:var(--gold-1);margin:16px 0 8px}
+.set-label:first-child{margin-top:0}
+.set-row{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px}
+.set-opt{background:rgba(255,255,255,.05);border:1.5px solid var(--line);border-radius:12px;
+  padding:12px 6px;font-weight:900;font-size:.85rem;color:var(--muted);transition:.18s;line-height:1.35}
+.set-opt small{font-weight:700;font-size:.66rem;color:var(--faint)}
+.set-opt:hover{border-color:rgba(255,255,255,.3);color:var(--text);transform:translateY(-2px)}
+.set-opt.on{background:var(--cta);border-color:var(--cta);color:var(--cta-dark);
+  box-shadow:0 6px 16px rgba(255,230,0,.35)}
+.set-opt.on small{color:rgba(20,20,0,.6)}
+body.theme-manga .set-opt{background:#fff;border:2.5px solid #161616;color:#5A5546;box-shadow:3px 3px 0 #161616}
+body.theme-manga .set-opt:hover{transform:translate(-1px,-1px)}
+body.theme-manga .set-opt.on{background:#FFE600;color:#161616;box-shadow:3px 3px 0 #161616}
+body.theme-manga .set-opt small{color:#8A8471}
+body.theme-manga .set-opt.on small{color:rgba(20,20,0,.55)}
+
+/* how-to rows */
+.htp{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:12px;
+  padding:12px 15px;margin-bottom:9px}
+.htp b{font-family:var(--font-d);font-size:.95rem}
+.htp p{color:var(--muted);font-size:.82rem;font-weight:700;margin-top:3px;line-height:1.5}
+body.theme-manga .htp{background:#fff;border:2px solid #161616;box-shadow:3px 3px 0 #161616}
+body.theme-manga .htp b{color:#161616}
+body.theme-manga .htp p{color:#5A5546}
+
+/* ============================================================
+   CASTLE BOOST — stronger Infinity Castle presence
+   ============================================================ */
+.castle-waves{height:230px;opacity:1}
+.castle-waves .w-foam{fill:none;stroke:rgba(220,245,255,.45);stroke-width:2.4px;
+  stroke-linecap:round;filter:drop-shadow(0 0 8px rgba(150,225,255,.55));
+  animation:slosh 9s ease-in-out infinite alternate}
+.castle-waves .w-foam.f2{animation-duration:7s;animation-delay:-2s;opacity:.6}
+.kcard.featured{box-shadow:0 0 34px rgba(255,120,40,.28),0 18px 44px rgba(3,4,15,.55)}
+body.theme-manga .kcard.featured{box-shadow:7px 7px 0 #161616}
+
+/* manual reduced-motion setting */
+body.reduce-motion *,body.reduce-motion *::before,body.reduce-motion *::after{
+  animation-duration:.01ms !important;transition-duration:.01ms !important}
+body.reduce-motion .castle-waves{display:none}
+
+/* ============================================================
+   ICHIBAN KUJI · KUJI CLUB — app logic (kiosk-faithful UI)
+   ============================================================ */
+"use strict";
+
+/* ---------------- PRIZE CATALOGS (design layer) ---------------- */
+const CATALOG = {
+  "Naruto · Hidden Leaf": {
+    A:{name:"Naruto Hokage Figure",emoji:"🍥",sub:"1:7 scale · 24 cm"},
+    B:{name:"Sasuke Uchiha Figure",emoji:"⚡",sub:"Chidori effect base"},
+    C:{name:"Kakashi Acrylic Stand",emoji:"📖",sub:"Icha Icha edition"},
+    D:{name:"Ichiraku Ramen Bowl",emoji:"🍜",sub:"Ceramic · 800 ml"},
+    E:{name:"Konoha Headband",emoji:"🎗️",sub:"Brushed-metal plate"},
+    F:{name:"Chibi Art Sticker Set",emoji:"✨",sub:"12 die-cut stickers"},
+    LAST:{name:"Kurama Nine-Tails Plush",emoji:"🦊",sub:"40 cm · only with the last ticket"}
+  },
+  "Demon Slayer · Dawn Patrol": {
+    A:{name:"Tanjiro Kamado Figure",emoji:"⚔️",sub:"Hinokami Kagura pose"},
+    B:{name:"Nezuko Kamado Figure",emoji:"🎋",sub:"Bamboo muzzle · 18 cm"},
+    C:{name:"Nichirin Letter Opener",emoji:"🗡️",sub:"Die-cast metal"},
+    D:{name:"Haori Pattern Blanket",emoji:"🧣",sub:"Checkered fleece"},
+    E:{name:"Hashira Acrylic Charm",emoji:"🎴",sub:"9 to collect"},
+    F:{name:"Ufotable Art Postcards",emoji:"🏞️",sub:"Set of 6"},
+    LAST:{name:"Nezuko Box Plush",emoji:"📦",sub:"Nezuko in her box · 35 cm"}
+  },
+  "Jujutsu Kaisen · Cursed Energy": {
+    A:{name:"Gojo Satoru Figure",emoji:"🕶️",sub:"Unmasked edition"},
+    B:{name:"Sukuna Figure",emoji:"👹",sub:"Domain expansion base"},
+    C:{name:"Cursed Energy Lamp",emoji:"🟣",sub:"USB-C · glows purple"},
+    D:{name:"Tokyo Jujutsu High Tee",emoji:"👕",sub:"Sizes S–XL"},
+    E:{name:"Cursed Tool Keychain",emoji:"🔑",sub:"5 to collect"},
+    F:{name:"Sorcery Sticker Pack",emoji:"✨",sub:"10 vinyl stickers"},
+    LAST:{name:"Prison Realm Replica",emoji:"🧊",sub:"Light-up cube · last one only"}
+  },
+  "Dragon Ball · Super Saiyans": {
+    A:{name:"Super Saiyan Goku Figure",emoji:"🔥",sub:"Aura effect stand"},
+    B:{name:"Vegeta Figure",emoji:"💥",sub:"Final Flash pose"},
+    C:{name:"4-Star Dragon Ball",emoji:"🟠",sub:"Resin replica · 7.5 cm"},
+    D:{name:"Capsule Corp Tee",emoji:"👕",sub:"Sizes S–XL"},
+    E:{name:"Shenron Keychain",emoji:"🐉",sub:"Gold-plated"},
+    F:{name:"Z-Fighters Sticker Set",emoji:"✨",sub:"12 die-cut stickers"},
+    LAST:{name:"Shenron Diorama",emoji:"🐉",sub:"28 cm · only with the last ticket"}
+  },
+  "Spy × Family · Secret Mission": {
+    A:{name:"Anya Forger Figure",emoji:"🌟",sub:"Wakuwaku pose"},
+    B:{name:"Loid & Yor Figure Set",emoji:"💼",sub:"Two-piece set"},
+    C:{name:"Bond Plush",emoji:"🐕",sub:"25 cm · fluffy"},
+    D:{name:"Peanut Tote Bag",emoji:"🥜",sub:"Canvas · Anya approved"},
+    E:{name:"Forger Family Standee",emoji:"🎀",sub:"Acrylic · 14 cm"},
+    F:{name:"Mission Sticker Pack",emoji:"✨",sub:"10 vinyl stickers"},
+    LAST:{name:"Giant Bond Plush",emoji:"🐶",sub:"50 cm · only with the last ticket"}
+  }
+};
+const GACHA_ITEMS = {
+  "Pocket Cats":[
+    {name:"Mochi · Cream Cat",emoji:"🐱",r:"SSR"},
+    {name:"Smokey · Night Cat",emoji:"🐈‍⬛",r:"SR"},
+    {name:"Peaches · Calico",emoji:"😺",r:"SR"},
+    {name:"Matcha · Grumpy",emoji:"😼",r:"R"},
+    {name:"Biscuit · Tabby",emoji:"😸",r:"R"},
+    {name:"Sesame · Chonk",emoji:"🙀",r:"R"}
+  ],
+  "Tiny Garden":[
+    {name:"Golden Mushroom",emoji:"🍄",r:"SSR"},
+    {name:"Moonflower",emoji:"🌙",r:"SR"},
+    {name:"Sunflower Pal",emoji:"🌻",r:"SR"},
+    {name:"Baby Cactus",emoji:"🌵",r:"R"},
+    {name:"Tulip Twin",emoji:"🌷",r:"R"},
+    {name:"Lucky Clover",emoji:"🍀",r:"R"}
+  ],
+  "Moon Bunnies":[
+    {name:"Luna · Star Bunny",emoji:"🌙",r:"SSR"},
+    {name:"Comet Chaser",emoji:"☄️",r:"SR"},
+    {name:"Mochi Pounder",emoji:"🐰",r:"SR"},
+    {name:"Carrot Guard",emoji:"🥕",r:"R"},
+    {name:"Cloud Napper",emoji:"🐇",r:"R"},
+    {name:"Star Snacker",emoji:"✨",r:"R"}
+  ]
+};
+const TIER_INIT = {A:2,B:4,C:6,D:12,E:20,F:36};
+const POINTS_PER_DRAW = 10, POINTS_RARE_BONUS = 50;
+
+/* ---------------- STATE ---------------- */
+const LS_KEY = "kuji_redesign_v1";
+let S = null;
+function freshState(){
+  const boxes = {};
+  (window.KUJI_DATA||[]).forEach(b=>{
+    boxes[b.id] = { ...b, tiers: b.tiers.map(t=>({...t})), avail: [...b.slots] };
+  });
+  return { boxes, wallet:[], points:1250, draws:0 };
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw){ const s = JSON.parse(raw); if(s && s.boxes) return s; }
+  }catch(e){}
+  return freshState();
+}
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(S)); }catch(e){} }
+function resetDemo(){
+  localStorage.removeItem(LS_KEY);
+  S = freshState(); save(); route();
+  toast("Demo data reset ✨");
+}
+S = loadState();
+
+/* ---------------- HELPERS ---------------- */
+const $ = s=>document.querySelector(s);
+const money = n=>"SGD " + n.toFixed(2);
+const boxOf = id=>S.boxes[id];
+const catalogOf = b=>CATALOG[b.name]||{};
+function toast(msg){
+  const t=document.createElement("div");
+  t.className="toast"; t.textContent=msg;
+  $("#toasts").appendChild(t);
+  setTimeout(()=>{t.classList.add("bye"); setTimeout(()=>t.remove(),320);},2100);
+}
+function go(h){ location.hash = h; }
+function lockScroll(on){ document.body.style.overflow = on?"hidden":""; }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+
+/* ---------------- CONFETTI ---------------- */
+function confetti(big){
+  const cv=$("#confetti"),ctx=cv.getContext("2d");
+  cv.width=innerWidth; cv.height=innerHeight;
+  const cols=["#FFE600","#B16DFF","#F08BD8","#8AFF6E","#3FD8C7","#FFE9A0"];
+  const ps=Array.from({length:big?200:110},()=>({
+    x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.35,
+    w:6+Math.random()*8,h:8+Math.random()*10,
+    vy:2.4+Math.random()*3.2,vx:-1.5+Math.random()*3,
+    r:Math.random()*Math.PI,vr:-.12+Math.random()*.24,
+    c:cols[Math.floor(Math.random()*cols.length)]
+  }));
+  const t0=performance.now();
+  (function fr(t){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);
+      ctx.fillStyle=p.c;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();});
+    if(t-t0<(big?3200:2300)) requestAnimationFrame(fr);
+    else ctx.clearRect(0,0,cv.width,cv.height);
+  })(t0);
+}
+
+/* ---------------- ROUTER ---------------- */
+let tab = "kuji";
+window.addEventListener("hashchange", route);
+function route(){
+  const h = location.hash || "#/";
+  closeModal(true);
+  document.querySelectorAll(".bnav").forEach(b=>b.classList.toggle("active",
+    (h.startsWith("#/wallet")&&b.dataset.nav==="wallet") ||
+    (h==="#/gacha"&&b.dataset.nav==="gacha") ||
+    ((h==="#/"||h==="")&&b.dataset.nav==="home")));
+  if(h.startsWith("#/box/")){ renderDetail(h.slice(6)); }
+  else if(h.startsWith("#/wallet")){ renderWallet(); }
+  else if(h.startsWith("#/gacha")){ tab="gacha"; renderHome(); }
+  else { tab="kuji"; renderHome(); }
+  syncTopNav();
+  window.scrollTo({top:0});
+}
+function syncTopNav(){
+  $("#pointsVal").textContent = S.points.toLocaleString();
+  $("#walletDot").classList.toggle("show", S.wallet.some(w=>w.unseen));
+}
+function setTab(t){ go(t==="gacha"?"#/gacha":"#/"); }
+
+/* ================= HOME (kiosk box list) ================= */
+function renderHome(){
+  const boxes = Object.values(S.boxes).filter(b=>b.type===tab);
+  $("#view").innerHTML = `
+  <div class="kiosk">
+    <div class="inst-bar">
+      <button class="inst-back" onclick="go('#/')" aria-label="Back">←</button>
+      <div class="inst-text">
+        Touch the ${tab==="kuji"?"ICHIBAN KUJI":"GACHA MACHINE"} and press the <span>'Start'</span> button.
+        <small>You can view the types of products and detailed information about them.</small>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab-pill ${tab==="kuji"?"active":""}" onclick="setTab('kuji')">KUJI</button>
+      <button class="tab-pill ${tab==="gacha"?"active":""}" onclick="setTab('gacha')">GACHA</button>
+    </div>
+    ${mvHero(boxes.reduce((a,b)=>(b.remaining/b.total < a.remaining/a.total ? b : a), boxes[0]))}
+    <div class="mv-strip-head">🔥 Trending now <span class="jp">急上昇</span></div>
+    <div class="mv-strip">
+      ${boxes.map((b,i)=>posterCard(b,i)).join("")}
+    </div>
+    <div class="mv-list-head">ALL ${tab==="kuji"?"LIVE BOXES":"MACHINES"}</div>
+    <div class="klist">
+      ${boxes.map((b,i)=>boxCard(b,i)).join("") || `<div class="empty-note">No live boxes right now.</div>`}
+    </div>
+    <div class="watermark">ichibankuji <span class="jp">一番くじ</span></div>
+    <div class="hint-line">Real collectibles · a fixed prize pool · every ticket wins something to keep</div>
+  </div>`;
+}
+/* ---- MyVideo-style hero + poster strip ---- */
+function mvHero(b){
+  if(!b) return "";
+  const [fr,ed] = b.name.split(" · ");
+  const isGacha = b.type==="gacha";
+  return `
+  <section class="mv-hero" onclick="go('#/box/${b.id}')">
+    <div class="mv-art"><img src="assets/${b.art}.svg" alt="${esc(b.name)}"></div>
+    <div class="mv-fire"></div>
+    <span class="kc-chip ${isGacha?"gacha":""}" style="position:absolute;top:14px;left:14px;z-index:2">
+      <span class="pulse"></span>${isGacha?'GACHA · <span class="jp">ガチャ</span>':'LIVE · <span class="jp">一番くじ</span>'}</span>
+    <span class="mv-share" onclick="event.stopPropagation();shareBox('${b.id}')" title="Share">↗</span>
+    <div class="mv-content">
+      <div class="mv-crumb">KUJIGACHA 首頁 〉 ${isGacha?"ガチャ":"一番くじ"} 〉 <b>LIVE 開抽中</b></div>
+      <h1 class="mv-title">《${esc(fr||b.name)}》${ed?` ${esc(ed)}`:""}<span class="jp">決戦、間近。</span></h1>
+      <p class="mv-desc">Real collectibles. A fixed prize pool. ${b.remaining}/${b.total} tickets left —
+        every draw wins something to keep. ${b.lastOneLive?"★ Last One prize is live!":""}</p>
+      <button class="mv-cta">立即開抽 ◆ START</button>
+    </div>
+  </section>`;
+}
+function posterCard(b,i){
+  const [fr,ed] = b.name.split(" · ");
+  const hot = b.remaining/b.total<=0.45;
+  return `
+  <article class="mv-card" style="animation-delay:${i*55}ms" onclick="go('#/box/${b.id}')">
+    <div class="mv-poster">
+      ${hot?`<span class="mv-tag">HOT</span>`:""}
+      <img src="assets/${b.art}.svg" alt="${esc(b.name)}" loading="lazy">
+    </div>
+    <b>${esc(fr||b.name)}</b>
+    <span class="mv-left">${b.remaining}/${b.total} left · ${money(b.price)}</span>
+  </article>`;
+}
+function shareBox(id){
+  const b = boxOf(id);
+  const url = location.href.split("#")[0] + "#/box/" + id;
+  try{
+    navigator.clipboard.writeText(url);
+    toast("Link copied — share it! 🔗");
+  }catch(e){ toast(url); }
+  sfx("click"); fxBurst(innerWidth-90, 90, false);
+}
+function boxCard(b,i){
+  const [fr,ed] = b.name.split(" · ");
+  const isGacha = b.type==="gacha";
+  const lastHot = b.lastOneLive && b.remaining>0 && b.remaining<=Math.max(10,b.total*0.2);
+  return `
+  <article class="kcard ${i===0?"featured":""}" style="animation-delay:${i*60}ms" onclick="go('#/box/${b.id}')">
+    <div class="art"><img src="assets/${b.art}.svg" alt="${esc(b.name)} artwork" loading="lazy"></div>
+    <div class="sheen"></div>
+    <div class="kc-top">
+      <span class="kc-chip ${isGacha?"gacha":""}"><span class="pulse"></span>${isGacha?'GACHA · <span class="jp">ガチャ</span>':'LIVE BOX · <span class="jp">一番くじ</span>'}</span>
+      ${lastHot?`<span class="kc-last">★ LAST ONE LIVE</span>`:""}
+    </div>
+    ${b.remaining/b.total<=0.45?`<span class="sfx-burst">残り少!</span>`:""}
+    <div class="kc-info">
+      <div class="kc-title">${esc(fr||b.name)}</div>
+      <div class="kc-edition">${esc(ed||"Capsule machine")}</div>
+      <div class="kc-remain"><b>${b.remaining}</b>/${b.total} remaining</div>
+    </div>
+    <div class="kc-side">
+      <span class="kc-price"><span class="dia">◆</span>${money(b.price)}</span>
+      <span class="kc-start">Start</span>
+    </div>
+  </article>`;
+}
+
+/* ================= BOX DETAIL (prize lineup) ================= */
+function renderDetail(id){
+  const b = boxOf(id);
+  if(!b){ go("#/"); return; }
+  if(b.type==="gacha"){ renderGachaDetail(b); return; }
+  const cat = catalogOf(b);
+  const rows = b.tiers.map((t,i)=>{
+    const p = cat[t.label]||{name:"Prize "+t.label,emoji:"🎁",sub:""};
+    const init = Math.max(TIER_INIT[t.label]||t.remaining, t.remaining);
+    const out = t.remaining===0;
+    return `
+    <div class="prow ${out?"soldout":""}" style="animation-delay:${i*50}ms">
+      <div class="pbadge"><b>${t.label}</b><small>GRADE</small></div>
+      <div class="pthumb">${p.emoji}</div>
+      <div class="pinfo">
+        <b>${p.name}</b><div class="sub">${p.sub}</div>
+        <div class="pbar"><i style="width:${init?Math.max(0,t.remaining/init*100):0}%"></i></div>
+      </div>
+      ${out?`<span class="soldout-stamp">SOLD OUT</span>`:""}
+      <div class="pqty"><b>${t.remaining}</b><span>LEFT</span></div>
+    </div>`;
+  }).join("");
+  const last = cat.LAST||{name:"Last One Prize",emoji:"🎁",sub:""};
+
+  $("#view").innerHTML = `
+  <div class="kiosk wide">
+    <div class="inst-bar">
+      <button class="inst-back" onclick="history.back()" aria-label="Back">←</button>
+      <div class="inst-text">
+        ${esc(b.name)}
+        <small>Check the prize lineup, then press <span>'Purchase'</span>.</small>
+      </div>
+      <div class="inst-count">${b.remaining}<small>/ ${b.total} LEFT</small></div>
+    </div>
+
+    <div class="detail-title-wrap"><div class="detail-title">
+      <span class="vjp jp">一番くじ</span>
+      <span class="detail-price"><span class="dia">◆</span> ${money(b.price)} per draw</span>
+    </div></div>
+
+    <div class="plist">
+      ${rows}
+      ${b.lastOne?`
+      <div class="prow lastone" style="animation-delay:${b.tiers.length*50}ms">
+        <div class="pbadge pink"><b>LAST</b><small>ONE</small></div>
+        <div class="pthumb">${last.emoji}</div>
+        <div class="pinfo"><b>${last.name}</b><div class="sub">${last.sub}</div></div>
+        <div class="pqty"><b>1</b><span>LEFT</span></div>
+      </div>`:""}
+      <div class="prow dc-row" style="animation-delay:${(b.tiers.length+1)*50}ms">
+        <div class="pbadge dc"><b>DC</b><small>CHANCE</small></div>
+        <div class="pthumb">🎯</div>
+        <div class="pinfo"><b>Double Chance entry</b><div class="sub">Every draw joins the online double-chance lottery</div></div>
+        <div class="pqty"><b>ON</b><span>ACTIVE</span></div>
+      </div>
+    </div>
+
+    <div class="watermark">ichibankuji <span class="jp">一番くじ</span></div>
+    <div class="hint-line">Touch a prize to check its details · sold prizes vanish from the pool</div>
+
+    <div class="purchase-bar">
+      <div class="pb-info">
+        <b>${money(b.price)} <span style="color:var(--muted);font-size:.76rem">/ draw</span></b>
+        <span>${b.remaining} tickets remaining · guaranteed win</span>
+      </div>
+      <button class="big-cta" ${b.remaining===0?"disabled":""} onclick="openDraw('${b.id}')">
+        ${b.remaining===0?"SOLD OUT":"PURCHASE ◆"}
+      </button>
+    </div>
+  </div>`;
+}
+
+/* ================= DRAW WIZARD ================= */
+let D = null;
+function openDraw(boxId){
+  const b = boxOf(boxId);
+  D = { boxId, step:1, qty:Math.min(1,b.remaining), picked:new Set(), results:[] };
+  modalShell(drawHTML());
+}
+function drawHTML(){
+  const b = boxOf(D.boxId);
+  const heads = {
+    1:{k:"STEP 1 · TICKETS",t:"Pick your tickets"},
+    2:{k:"STEP 2 · PAYMENT",t:"Confirm payment"},
+    3:{k:"STEP 3 · REVEAL",t:"Reveal your prizes"},
+    4:{k:"RESULTS",t:"Your prizes 🎉"}
+  };
+  const h = heads[D.step];
+  return `<div class="modal-head">
+      <button class="m-close" onclick="closeModal()" aria-label="Close">✕</button>
+      <div class="m-kicker">${h.k}</div><h3>${h.t}</h3>
+      <div class="m-sub">${esc(b.name)} · ${money(b.price)}/draw</div>
+    </div>
+    <div class="modal-body">${drawBody()}</div>`;
+}
+function drawBody(){
+  const b = boxOf(D.boxId);
+  if(D.step===1){
+    const need = D.qty - D.picked.size;
+    return `
+      <div class="qty-row">
+        <button class="qty-btn" onclick="chQty(-1)" aria-label="Fewer tickets">−</button>
+        <div class="qty-val">${D.qty}<small>TICKETS</small></div>
+        <button class="qty-btn" onclick="chQty(1)" aria-label="More tickets">+</button>
+      </div>
+      <div class="board">
+        ${Array.from({length:b.total},(_,i)=>{
+          const n=i+1;
+          const avail = b.avail.includes(n);
+          const picked = D.picked.has(n);
+          return `<button class="slot ${avail?(picked?"picked":"avail"):"taken"}" ${avail?`onclick="pickSlot(${n})"`:"disabled"}>${n}</button>`;
+        }).join("")}
+      </div>
+      <div class="board-legend">
+        <span><i style="background:rgba(255,255,255,.15)"></i>Available</span>
+        <span><i style="background:linear-gradient(100deg,#7C8CF8,#F08BD8)"></i>Your pick</span>
+        <span><i style="background:#333;opacity:.5"></i>Drawn</span>
+      </div>
+      <button class="lucky-dip" onclick="luckyDip()">🎲 Lucky dip — pick for me</button>
+      <button class="big-cta block" style="margin-top:16px" ${need!==0?"disabled":""} onclick="drawStep(2)">
+        ${need>0?`PICK ${need} MORE`:"CONTINUE →"}
+      </button>`;
+  }
+  if(D.step===2){
+    const total = D.qty*b.price;
+    return `
+      <div class="payframe"><div class="payframe-in">
+        <div class="pay-banner"><img src="assets/${b.art}.svg" alt=""></div>
+        <div class="pay-rows">
+          <div class="kf-row"><span class="k">Box</span><span class="v">${esc(b.name)}</span></div>
+          <div class="kf-row"><span class="k">Number of tickets</span><span class="v">${D.qty}</span></div>
+          <div class="kf-row"><span class="k">Ticket numbers</span><span class="v">No. ${[...D.picked].sort((a,b)=>a-b).join(", ")}</span></div>
+          <div class="kf-row"><span class="k">Total amount</span><span class="v total">${money(total)}</span></div>
+        </div>
+        <div class="sticker-band">
+          <span class="sb-smile">☺</span><span class="sb-wave"></span><span class="sb-stripe"></span>
+        </div>
+      </div></div>
+      <div class="pay-methods">
+        <span class="pm sel">💳 Card</span><span class="pm">VISA</span><span class="pm">Mastercard</span><span class="pm">PayNow</span><span class="pm">GrabPay</span>
+      </div>
+      <p class="fine-print">※ Demo checkout — no real payment is processed.</p>
+      <button class="big-cta block" id="payBtn" style="margin-top:12px" onclick="pay()">START PAYMENT ◆ ${money(total)}</button>
+      <button class="btn-ghost-line" onclick="drawStep(1)">← Back to tickets</button>`;
+  }
+  if(D.step===3){
+    const idx = D.results.length;
+    const cur = D.pending[idx];
+    return `
+      <div class="reveal-stage">
+        <div class="reveal-progress">
+          ${D.pending.map((_,i)=>`<span class="rp-dot ${i<idx?"done":i===idx?"cur":""}"></span>`).join("")}
+        </div>
+        <div class="reveal-card" id="revealCard" onclick="flipCard()">
+          <div class="rc-inner">
+            <div class="rc-face rc-back">
+              <span class="flow"></span>
+              <span class="dia">◆</span>
+              <span class="tt">ICHIBAN KUJI</span>
+              <span class="hint">No. ${String(cur.slot).padStart(2,"0")} · TAP TO REVEAL</span>
+            </div>
+            <div class="rc-face rc-front" id="rcFront"></div>
+          </div>
+        </div>
+        <div id="revealNext"></div>
+      </div>`;
+  }
+  const rare = D.results.some(r=>["A","B","LAST"].includes(r.tier));
+  return `
+    <div class="result-list">
+      ${D.results.map((r,i)=>`
+        <div class="result-item ${["A","B","LAST"].includes(r.tier)?"hi":""}" style="animation-delay:${i*70}ms">
+          <div class="mini-badge">${r.tier==="LAST"?"★":r.tier}</div>
+          <div><b>${r.emoji} ${r.name}</b><div class="sub">${esc(r.box)}</div></div>
+          <span class="tno">Ticket<br>No. ${String(r.slot).padStart(2,"0")}</span>
+        </div>`).join("")}
+    </div>
+    ${rare?`<p class="rare-call">★ RARE PULL — congratulations! ★</p>`:""}
+    <button class="big-cta block" style="margin-top:14px" onclick="closeModal()">DONE — TO MY WALLET 🎫</button>
+    <button class="btn-ghost-line" onclick="again()">Draw again</button>`;
+}
+function chQty(d){
+  const b = boxOf(D.boxId);
+  const max = Math.min(10,b.remaining);
+  D.qty = Math.max(1, Math.min(max, D.qty+d));
+  while(D.picked.size>D.qty){ D.picked.delete([...D.picked].pop()); }
+  refreshModal();
+}
+function pickSlot(n){
+  if(D.picked.has(n)) D.picked.delete(n);
+  else if(D.picked.size<D.qty) D.picked.add(n);
+  else { toast(`Max ${D.qty} ticket${D.qty>1?"s":""} — tap a pick to deselect`); return; }
+  refreshModal();
+}
+function luckyDip(){
+  const b = boxOf(D.boxId);
+  D.picked = new Set();
+  const pool = [...b.avail];
+  while(D.picked.size<D.qty && pool.length){
+    const i = Math.floor(Math.random()*pool.length);
+    D.picked.add(pool.splice(i,1)[0]);
+  }
+  refreshModal();
+}
+function drawStep(n){ D.step=n; refreshModal(); }
+function pay(){
+  const btn = $("#payBtn");
+  btn.disabled = true; btn.textContent = "PROCESSING…";
+  fxBurstAt(btn, true);
+  sfx("flip");
+  setTimeout(()=>{
+    const b = boxOf(D.boxId);
+    const cat = catalogOf(b);
+    D.pending = [...D.picked].sort((a,b)=>a-b).map(slot=>{
+      const pool = [];
+      b.tiers.forEach(t=>{ for(let i=0;i<t.remaining;i++) pool.push(t.label); });
+      let tier = pool.length ? pool[Math.floor(Math.random()*pool.length)] : "F";
+      b.avail.splice(b.avail.indexOf(slot),1);
+      b.remaining--;
+      const t = b.tiers.find(x=>x.label===tier);
+      if(t) t.remaining--;
+      if(b.remaining===0 && b.lastOne) tier = "LAST";
+      const p = tier==="LAST" ? (cat.LAST||{name:"Last One Prize",emoji:"🎁"}) : (cat[tier]||{name:"Prize "+tier,emoji:"🎁"});
+      return { slot, tier, name:p.name, emoji:p.emoji, box:b.name };
+    });
+    const st = randFx();
+    const K = BREATHS[st];
+    kanjiFlash(K.main, K.sub, "fx-"+st);
+    uiShake();
+    sfx("win");
+    D.step = 3; refreshModal();
+  }, 1300);
+}
+function flipCard(){
+  const card = $("#revealCard");
+  if(!card || card.classList.contains("flip")) return;
+  const idx = D.results.length;
+  const r = D.pending[idx];
+  $("#rcFront").innerHTML = `
+    <span class="burst"></span>
+    <span class="p-tier">${r.tier==="LAST"?"LAST ONE PRIZE":"TIER "+r.tier}</span>
+    <div class="pbadge"><b>${r.tier==="LAST"?"★":r.tier}</b></div>
+    <span class="p-emoji">${r.emoji}</span>
+    <span class="p-name">${r.name}</span>`;
+  card.classList.add("flip");
+  sfx("flip");
+  const st = randFx();
+  fxBurstAt(card, ["A","B","LAST"].includes(r.tier), st);
+  if(["A","B","LAST"].includes(r.tier)){ kanjiFlash("大当たり！","BIG WIN", "fx-gold"); uiShake(); sfx("rare"); }
+  setTimeout(()=>{
+    D.results.push(r);
+    S.wallet.unshift({...r, at:Date.now(), unseen:true});
+    S.points += POINTS_PER_DRAW + (["A","B","LAST"].includes(r.tier)?POINTS_RARE_BONUS:0);
+    S.draws++;
+    save(); syncTopNav();
+    if(["A","B","LAST"].includes(r.tier)) confetti(true);
+    const last = D.results.length===D.pending.length;
+    $("#revealNext").innerHTML = last
+      ? `<button class="big-cta" onclick="finishDraw()">SEE RESULTS →</button>`
+      : `<button class="big-cta" onclick="nextTicket()">NEXT TICKET →</button>`;
+  }, 650);
+}
+function nextTicket(){ D.step=3; refreshModal(); }
+function finishDraw(){
+  D.step=4; refreshModal();
+  renderDetail(D.boxId);
+}
+function again(){
+  const b = boxOf(D.boxId);
+  closeModal();
+  if(b.remaining>0) openDraw(b.id);
+}
+
+/* ================= GACHA ================= */
+function renderGachaDetail(b){
+  const items = GACHA_ITEMS[b.name]||[];
+  $("#view").innerHTML = `
+  <div class="kiosk">
+    <div class="inst-bar">
+      <button class="inst-back" onclick="history.back()" aria-label="Back">←</button>
+      <div class="inst-text">
+        ${esc(b.name)}
+        <small>Capsule machine · 6 to collect · press <span>'Spin'</span>.</small>
+      </div>
+      <div class="inst-count">${b.remaining}<small>/ ${b.total} LEFT</small></div>
+    </div>
+
+    <div class="detail-title-wrap"><div class="detail-title">
+      <span class="vjp jp">ガチャ</span>
+      <span class="detail-price"><span class="dia">◆</span> ${money(b.price)} per spin</span>
+    </div></div>
+
+    <div class="plist">
+      ${items.map((it,i)=>`
+      <div class="prow" style="animation-delay:${i*50}ms;padding-left:14px">
+        <div class="pthumb">${it.emoji}</div>
+        <div class="pinfo"><b>${it.name}</b><div class="sub">${it.r==="SSR"?"Ultra rare":it.r==="SR"?"Super rare":"Rare"} capsule</div></div>
+        <span class="rarity ${it.r.toLowerCase()}">${it.r}</span>
+      </div>`).join("")}
+    </div>
+
+    <div class="watermark">gachaclub <span class="jp">ガチャ</span></div>
+    <div class="hint-line">Every spin drops one random capsule · no empty spins</div>
+
+    <div class="purchase-bar">
+      <div class="pb-info">
+        <b>${money(b.price)} <span style="color:var(--muted);font-size:.76rem">/ spin</span></b>
+        <span>${b.remaining} capsules remaining</span>
+      </div>
+      <button class="big-cta" ${b.remaining===0?"disabled":""} onclick="openGacha('${b.id}')">${b.remaining===0?"SOLD OUT":"SPIN ◉"}</button>
+    </div>
+  </div>`;
+}
+let G = null;
+function openGacha(boxId){
+  G = { boxId, phase:"idle", item:null };
+  modalShell(gachaHTML());
+}
+function gachaHTML(){
+  const b = boxOf(G.boxId);
+  const caps = [["#FF5C8A","12%","18%"],["#FFE600","58%","10%"],["#3FD8C7","30%","58%"],["#B16DFF","66%","55%"],["#4D96FF","16%","62%"],["#FF9F43","48%","32%"]];
+  const globe = caps.map(c=>`<span class="caps" style="--c1:${c[0]};left:${c[1]};top:${c[2]}"></span>`).join("");
+  let body;
+  if(G.phase==="idle"||G.phase==="spin"){
+    body = `<div class="gacha-stage">
+      <div class="machine ${G.phase==="spin"?"shake":""}">
+        <div class="m-globe">${globe}</div>
+        <div class="m-base"><div class="m-knob"></div></div>
+        <div class="m-slot"></div>
+      </div>
+      <button class="big-cta" style="margin-top:20px" ${G.phase==="spin"?"disabled":""} onclick="spinGacha()">
+        ${G.phase==="spin"?"SPINNING…":`SPIN · ${money(b.price)}`}
+      </button>
+      <p class="fine-print">※ Demo spin — no real payment.</p>
+    </div>`;
+  } else if(G.phase==="drop"){
+    body = `<div class="gacha-stage">
+      <div class="machine"><div class="m-globe">${globe}</div>
+      <div class="m-base"><div class="m-knob"></div></div><div class="m-slot"></div></div>
+      <p style="margin-top:16px;font-weight:900;color:var(--gold-1);letter-spacing:1px">YOUR CAPSULE ROLLED OUT!</p>
+      <div class="drop-caps" style="--c1:${G.capColor}" onclick="crackCapsule()" title="Tap to open"></div>
+      <p style="color:var(--muted);font-size:.78rem;font-weight:700;margin-top:8px">Tap the capsule to open it</p>
+    </div>`;
+  } else {
+    const it = G.item;
+    body = `<div class="reveal-stage">
+      <span class="rarity ${it.r.toLowerCase()}">${it.r} ${it.r==="SSR"?"· ULTRA RARE":it.r==="SR"?"· SUPER RARE":"· RARE"}</span>
+      <div class="reveal-card flip" style="height:280px;cursor:default"><div class="rc-inner">
+        <div class="rc-face rc-front" style="transform:none">
+          <span class="p-emoji" style="font-size:3.8rem">${it.emoji}</span>
+          <span class="p-name" style="font-size:1.1rem">${it.name}</span>
+          <span class="p-tier">${esc(b.name)}</span>
+        </div>
+      </div></div>
+      <button class="big-cta" onclick="gachaDone()">ADD TO WALLET 🎫</button>
+      <button class="btn-ghost-line" onclick="gachaAgain()">Spin again</button>
+    </div>`;
+  }
+  return `<div class="modal-head">
+    <button class="m-close" onclick="closeModal()" aria-label="Close">✕</button>
+    <div class="m-kicker">GACHA MACHINE</div><h3>${esc(b.name)}</h3>
+    <div class="m-sub">${b.remaining} capsules left · ${money(b.price)}/spin</div>
+  </div><div class="modal-body">${body}</div>`;
+}
+function spinGacha(){
+  const b = boxOf(G.boxId);
+  if(b.remaining<=0) return;
+  G.phase="spin"; refreshModal();
+  fxBurstAt(document.querySelector(".m-base"), false);
+  kanjiFlash("ガチャ","SPIN!");
+  sfx("spin");
+  setTimeout(()=>{
+    const items = GACHA_ITEMS[b.name];
+    const roll = Math.random();
+    const rar = roll<0.08?"SSR":roll<0.30?"SR":"R";
+    const pool = items.filter(i=>i.r===rar);
+    G.item = pool[Math.floor(Math.random()*pool.length)];
+    G.capColor = rar==="SSR"?"#FF9F43":rar==="SR"?"#B16DFF":"#3FD8C7";
+    b.avail.pop(); b.remaining--;
+    G.phase="drop"; refreshModal();
+  }, 1000);
+}
+function crackCapsule(){
+  const el = document.querySelector(".drop-caps");
+  if(el) el.classList.add("open");
+  if(G.item.r!=="R"){ confetti(G.item.r==="SSR"); uiShake(); }
+  if(G.item.r==="SSR"){ kanjiFlash("大当たり！","SSR GET", "fx-gold"); sfx("rare"); }
+  setTimeout(()=>{ G.phase="reveal"; refreshModal(); }, 480);
+}
+function gachaDone(){
+  const b = boxOf(G.boxId);
+  S.wallet.unshift({tier:G.item.r, name:G.item.name, emoji:G.item.emoji, box:b.name, slot:"—", at:Date.now(), unseen:true});
+  S.points += POINTS_PER_DRAW + (G.item.r!=="R"?POINTS_RARE_BONUS:0);
+  S.draws++;
+  save(); syncTopNav(); closeModal(); renderGachaDetail(b);
+}
+function gachaAgain(){
+  const b = boxOf(G.boxId);
+  S.wallet.unshift({tier:G.item.r, name:G.item.name, emoji:G.item.emoji, box:b.name, slot:"—", at:Date.now(), unseen:true});
+  S.points += POINTS_PER_DRAW + (G.item.r!=="R"?POINTS_RARE_BONUS:0);
+  S.draws++;
+  save(); syncTopNav();
+  closeModal();
+  if(b.remaining>0) openGacha(b.id); else renderGachaDetail(b);
+}
+
+/* ================= WALLET ================= */
+function renderWallet(){
+  S.wallet.forEach(w=>w.unseen=false); save(); syncTopNav();
+  const items = S.wallet.map((w,i)=>`
+    <div class="wallet-item" style="animation-delay:${i*45}ms">
+      <div class="pbadge ${w.tier==="LAST"?"pink":""}"><b>${w.tier==="LAST"?"★":w.tier}</b></div>
+      <div class="pthumb">${w.emoji}</div>
+      <div><b>${esc(w.name)}</b><div class="sub">${esc(w.box)} · Ticket No. ${w.slot}</div></div>
+      <span class="when">${new Date(w.at).toLocaleDateString("en-SG",{day:"numeric",month:"short"})}<br>${new Date(w.at).toLocaleTimeString("en-SG",{hour:"2-digit",minute:"2-digit"})}</span>
+    </div>`).join("");
+  $("#view").innerHTML = `
+  <div class="kiosk">
+    <div class="inst-bar">
+      <button class="inst-back" onclick="history.back()" aria-label="Back">←</button>
+      <div class="inst-text">My wallet 🎫<small>Everything you've won — shipped after you claim it.</small></div>
+    </div>
+    <div class="wallet-head" style="margin-top:4px">
+      <div class="wallet-stats" style="margin-left:0">
+        <div class="w-chip"><b>${S.points.toLocaleString()}</b><span>POINTS</span></div>
+        <div class="w-chip"><b>${S.wallet.length}</b><span>PRIZES</span></div>
+        <div class="w-chip"><b>${S.draws}</b><span>DRAWS</span></div>
+      </div>
+    </div>
+    <div class="wallet-list">
+      ${items || `<div class="wallet-empty">
+        <span class="big">🎁</span><h3>No prizes yet</h3>
+        <p>Draw your first ticket — every ticket wins something to keep.</p>
+        <button class="big-cta" style="margin-top:16px" onclick="go('#/')">◆ Browse live boxes</button>
+      </div>`}
+    </div>
+  </div>`;
+}
+
+/* ================= MODAL PLUMBING ================= */
+function modalShell(html){
+  $("#modalStage").innerHTML = `<div class="modal" id="modal">${html}</div>`;
+  $("#overlay").classList.add("open");
+  lockScroll(true);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>$("#modal").classList.add("show")));
+}
+function refreshModal(){ if(D||G){ const el=$("#modal"); if(el) el.innerHTML = (D?drawHTML():gachaHTML()); } }
+function closeModal(silent){
+  $("#overlay").classList.remove("open");
+  const md = $("#menuDrawer");
+  if(md) md.classList.remove("open");
+  const m = $("#modal");
+  if(m){ m.classList.remove("show"); setTimeout(()=>{ $("#modalStage").innerHTML=""; }, silent?0:280); }
+  lockScroll(false);
+  if(!silent){ D=null; G=null; }
+}
+function onOverlay(){ closeModal(); }
+document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeModal(); });
+
+/* ---------------- DEMON-SLAYER CINEMATIC FX ENGINE ----------------
+   全呼吸法隨機:日/水/炎/雷/風/岩/蟲/花/霞/音/戀/蛇/獸 — random on every press */
+const BREATHS = {
+  flame:  {main:"炎ノ呼吸", sub:"FLAME BREATHING",   ring:"#FFB84D", flash:"255,170,60",  ringShape:"circle"},
+  sun:    {main:"日ノ呼吸", sub:"SUN BREATHING",     ring:"#FF5A3C", flash:"255,90,50",   ringShape:"circle"},
+  water:  {main:"水ノ呼吸", sub:"WATER BREATHING",   ring:"#8FD8FF", flash:"120,200,255", ringShape:"ellipse"},
+  thunder:{main:"雷ノ呼吸", sub:"THUNDER BREATHING", ring:"#FFED6E", flash:"255,240,160", ringShape:"circle"},
+  wind:   {main:"風ノ呼吸", sub:"WIND BREATHING",    ring:"#A8F5C8", flash:"170,255,205", ringShape:"ellipse"},
+  stone:  {main:"岩ノ呼吸", sub:"STONE BREATHING",   ring:"#C9B8A8", flash:"205,185,150", ringShape:"circle"},
+  insect: {main:"蟲ノ呼吸", sub:"INSECT BREATHING",  ring:"#D8B4FF", flash:"220,180,255", ringShape:"circle"},
+  flower: {main:"花ノ呼吸", sub:"FLOWER BREATHING",  ring:"#FFB8D9", flash:"255,190,220", ringShape:"ellipse"},
+  mist:   {main:"霞ノ呼吸", sub:"MIST BREATHING",    ring:"#D9F2EF", flash:"235,250,250", ringShape:"ellipse"},
+  sound:  {main:"音ノ呼吸", sub:"SOUND BREATHING",   ring:"#FFD76E", flash:"255,215,110", ringShape:"circle"},
+  love:   {main:"戀ノ呼吸", sub:"LOVE BREATHING",    ring:"#FF9FC0", flash:"255,160,200", ringShape:"circle"},
+  serpent:{main:"蛇ノ呼吸", sub:"SERPENT BREATHING", ring:"#C8B8FF", flash:"205,185,255", ringShape:"ellipse"},
+  beast:  {main:"獸ノ呼吸", sub:"BEAST BREATHING",   ring:"#8FF0E4", flash:"150,240,230", ringShape:"circle"}
+};
+const FX_STYLES = Object.keys(BREATHS);
+let fxLast = null;
+function randFx(){
+  let s;
+  do{ s = FX_STYLES[Math.floor(Math.random()*FX_STYLES.length)]; }while(s===fxLast);
+  fxLast = s;
+  return s;
+}
+const FX = { parts:[], rings:[], arcs:[], flashes:[], bolts:[], running:false };
+let kfxT = null;
+const R = (a,b)=>a+Math.random()*(b-a);
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+
+function fxBurst(x,y,big,style){
+  if(SETTINGS.fx==="off") return;
+  const M = SETTINGS.fx==="lite" ? .45 : 1;
+  const NN = n=>Math.max(1,Math.round(n*M));
+  const st = style || randFx();
+  FX.flashes.push({x,y,r:12,a:st==="thunder"?.7:.5,vr:(big?26:15)*(st==="thunder"?1.5:1),st});
+  FX.rings.push({x,y,r:6,a:.85,vr:5.2,st});
+  if(big) FX.rings.push({x,y,r:2,a:.95,vr:8,st});
+
+  if(st==="flame"||st==="sun"){
+    const pal = st==="sun" ? ["190,15,10","255,70,35","255,215,160"] : ["255,60,10","255,150,40","255,235,160"];
+    const n = NN(big?16:8);
+    for(let i=0;i<n;i++) FX.parts.push({t:"tongue",
+      x:x+R(-14,14), y:y+R(-8,8), vx:R(-.9,.9), vy:R(-4.6,-2.2),
+      w:R(7,15)*(big?1.35:1), h:R(18,34)*(big?1.35:1), rot:R(-.5,.5), wob:R(0,6.28),
+      pal, life:1, decay:R(.011,.02)});
+    const e = NN(big?38:14);
+    for(let i=0;i<e;i++) FX.parts.push({t:"ember",
+      x, y, vx:R(-2.2,2.2), vy:R(-5.5,-1.2), g:-.03,
+      col:st==="sun"?"#FF6E4D":"#FFD23F",
+      r:R(1.2,2.6), life:1, decay:R(.008,.016), seed:R(0,6.28)});
+  }
+  else if(st==="water"){
+    const a = NN(big?6:3);
+    for(let i=0;i<a;i++) FX.arcs.push({
+      x, y, r:R(16,26), vr:R(5.5,9)*(big?1.25:1), a0:R(0,6.28), spin:R(-.09,.09),
+      span:R(.9,1.5), w:R(6,11), life:1, decay:R(.016,.026)});
+    const d = NN(big?44:18);
+    for(let i=0;i<d;i++){ const an=R(0,6.28), sp=R(2,6.5);
+      FX.parts.push({t:"drop", x, y, px:x, py:y, vx:Math.cos(an)*sp, vy:Math.sin(an)*sp-2.4,
+        g:.22, r:R(1.6,3.4), life:1, decay:R(.012,.02)}); }
+  }
+  else if(st==="thunder"){
+    /* jagged lightning bolts crackling outward */
+    const nb = NN(big?7:4);
+    for(let i=0;i<nb;i++){
+      const ang=R(0,6.28), len=R(70,big?190:120), segs=6+(Math.random()*4|0);
+      const pts=[{x,y}]; let px=x,py=y,a=ang;
+      for(let s=0;s<segs;s++){
+        a+=R(-.75,.75);
+        px+=Math.cos(a)*(len/segs); py+=Math.sin(a)*(len/segs);
+        pts.push({x:px,y:py});
+      }
+      FX.bolts.push({pts, life:1, decay:R(.045,.08), w:R(2,3.4)});
+    }
+    const e = NN(big?26:12);
+    for(let i=0;i<e;i++){ const an=R(0,6.28), sp=R(3,8);
+      FX.parts.push({t:"spark", x, y, vx:Math.cos(an)*sp, vy:Math.sin(an)*sp,
+        g:.05, r:R(1,2.2), life:1, decay:R(.03,.05)}); }
+  }
+  else if(st==="wind"){
+    const n = NN(big?34:16);
+    for(let i=0;i<n;i++) FX.parts.push({t:"wind",
+      cx:x, cy:y, ang:R(0,6.28), av:R(.14,.26)*(Math.random()<.5?-1:1),
+      rad:R(4,10), radV:R(.45,1.05), rise:0, vy:R(-2.8,-1.5),
+      maxH:R(90,big?190:120), w:R(3.5,7), life:1, decay:R(.011,.018)});
+    const l = NN(big?12:5);
+    for(let i=0;i<l;i++){ const an=R(0,6.28), sp=R(1,3);
+      FX.parts.push({t:"leaf", x, y, vx:Math.cos(an)*sp, vy:Math.sin(an)*sp-2,
+        g:.1, rot:R(0,6.28), vr:R(-.25,.25), r:R(2.4,4), col:"#7BE8B0", life:1, decay:R(.012,.02)}); }
+  }
+  else if(st==="stone"){
+    /* heavy rock shards + dust */
+    const n = NN(big?14:7);
+    for(let i=0;i<n;i++) FX.parts.push({t:"rock",
+      x, y, vx:R(-3.4,3.4), vy:R(-6,-2), g:.34, r:R(5,11),
+      rot:R(0,6.28), vr:R(-.2,.2), col:pick(["#B9A98F","#8F8069","#D8CBB4"]),
+      verts:Array.from({length:5},()=>[R(-1,1),R(-1,1)]), life:1, decay:R(.012,.02)});
+    for(let i=0;i<4;i++) FX.parts.push({t:"mist",
+      x:x+R(-16,16), y:y+R(-10,10), vx:R(-.4,.4), vy:R(-.4,-.1),
+      r:R(10,18), vr:R(.4,.8), a:R(.08,.13), col:"210,190,160", life:1, decay:R(.012,.016)});
+  }
+  else if(st==="insect"){
+    /* fluttering butterflies */
+    const n = NN(big?7:3);
+    for(let i=0;i<n;i++) FX.parts.push({t:"bfly",
+      x:x+R(-10,10), y:y+R(-8,8), vx:R(-1.2,1.2), vy:R(-1.9,-.7),
+      phase:R(0,6.28), col:pick(["#B98CFF","#E3C8FF","#9E6BF0"]), r:R(4.5,7),
+      life:1, decay:R(.008,.013)});
+    const l = NN(big?10:5);
+    for(let i=0;i<l;i++){ const an=R(0,6.28), sp=R(.6,2.2);
+      FX.parts.push({t:"leaf", x, y, vx:Math.cos(an)*sp, vy:Math.sin(an)*sp-1.6,
+        g:.06, rot:R(0,6.28), vr:R(-.2,.2), r:R(2,3.4), col:"#D8B4FF", life:1, decay:R(.01,.016)}); }
+  }
+  else if(st==="flower"){
+    /* swirling petals */
+    const n = NN(big?26:12);
+    for(let i=0;i<n;i++){ const an=R(0,6.28), sp=R(.8,3.4);
+      FX.parts.push({t:"leaf", x, y, vx:Math.cos(an)*sp, vy:Math.sin(an)*sp-2.2,
+        g:.07, rot:R(0,6.28), vr:R(-.22,.22), r:R(2.4,4.2),
+        col:pick(["#FFB8D9","#FF9FC7","#FFD9E8"]), life:1, decay:R(.009,.015)}); }
+  }
+  else if(st==="mist"){
+    /* soft obscuring fog puffs */
+    const n = NN(big?12:6);
+    for(let i=0;i<n;i++) FX.parts.push({t:"mist",
+      x:x+R(-24,24), y:y+R(-16,16), vx:R(-.5,.5), vy:R(-.5,-.1),
+      r:R(16,30)*(big?1.25:1), vr:R(.5,1), a:R(.1,.16), col:"235,252,250",
+      life:1, decay:R(.007,.011)});
+  }
+  else if(st==="sound"){
+    /* flamboyant musical notes + sparkles + extra rings */
+    const n = NN(big?10:5);
+    for(let i=0;i<n;i++) FX.parts.push({t:"note",
+      x:x+R(-10,10), y:y+R(-6,6), vx:R(-1,1), vy:R(-2.4,-1.1), g:-.008,
+      glyph:pick(["♪","♫","♬"]), col:pick(["#FFD76E","#FFF0B0","#FFB84D"]),
+      r:R(1.3,2.1), seed:R(0,6.28), life:1, decay:R(.011,.017)});
+    const e = NN(big?16:8);
+    for(let i=0;i<e;i++){ const an=R(0,6.28), sp=R(2,5);
+      FX.parts.push({t:"spark", x, y, vx:Math.cos(an)*sp, vy:Math.sin(an)*sp,
+        g:.03, r:R(.8,1.8), col:"#FFF0B0", life:1, decay:R(.025,.04)}); }
+    FX.rings.push({x,y,r:14,a:.7,vr:6.6,st});
+  }
+  else if(st==="love"){
+    /* floating hearts */
+    const n = NN(big?12:6);
+    for(let i=0;i<n;i++) FX.parts.push({t:"heart",
+      x:x+R(-10,10), y:y+R(-8,8), vx:R(-.9,.9), vy:R(-2.8,-1.3),
+      seed:R(0,6.28), r:R(5,9)*(big?1.2:1),
+      col:pick(["#FF9FC0","#FF6FA5","#FFD0E2"]), life:1, decay:R(.011,.017)});
+  }
+  else if(st==="serpent"){
+    /* slithering sine-wave strikes */
+    const n = NN(big?7:4);
+    for(let i=0;i<n;i++){ const dir=Math.random()<.5?-1:1;
+      FX.parts.push({t:"snek", x, y, y0:y, px:x, py:y, vx:dir*R(2.2,4),
+        t0:R(0,6.28), amp:R(8,16), fr:R(.18,.3),
+        col:pick(["#F0EAFF","#B9A5FF"]), r:R(1.8,2.8), life:1, decay:R(.013,.02)}); }
+  }
+  else{ /* beast — jagged saw-blade shards */
+    const n = NN(big?10:5);
+    for(let i=0;i<n;i++){ const an=R(0,6.28), sp=R(2.5,5.5);
+      FX.parts.push({t:"saw", x, y, vx:Math.cos(an)*sp, vy:Math.sin(an)*sp-1,
+        g:.12, rot:R(0,6.28), vr:R(-.3,.3), r:R(5,9), col:"#8FF0E4",
+        life:1, decay:R(.015,.024)}); }
+  }
+  if(!FX.running){ FX.running=true; requestAnimationFrame(fxLoop); }
+}
+function fxLoop(){
+  const cv=$("#fx"),ctx=cv.getContext("2d");
+  cv.width=innerWidth; cv.height=innerHeight;
+  ctx.clearRect(0,0,cv.width,cv.height);
+
+  /* radial flashes */
+  FX.flashes.forEach(f=>{
+    f.r+=f.vr; f.a*=(f.st==="thunder"?.84:.9);
+    const g=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r);
+    g.addColorStop(0,`rgba(${BREATHS[f.st].flash},${f.a})`);
+    g.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,6.29); ctx.fill();
+  });
+  FX.flashes = FX.flashes.filter(f=>f.a>.03);
+
+  /* rings — color & shape follow the breathing style */
+  FX.rings.forEach(g=>{
+    g.r+=g.vr; g.a-=.03;
+    const B=BREATHS[g.st]||BREATHS.flame;
+    ctx.globalAlpha=Math.max(0,g.a);
+    ctx.strokeStyle=B.ring;
+    ctx.lineWidth=g.st==="flame"||g.st==="sun"?5:g.st==="thunder"?2.4:3;
+    ctx.beginPath();
+    if(B.ringShape==="circle") ctx.arc(g.x,g.y,g.r,0,6.29);
+    else ctx.ellipse(g.x,g.y,g.r,g.r*.42,0,0,6.29);
+    ctx.stroke();
+  });
+  ctx.globalAlpha=1;
+  FX.rings = FX.rings.filter(g=>g.a>0);
+
+  /* lightning bolts — flickering jagged strokes */
+  FX.bolts.forEach(b=>{
+    b.life-=b.decay;
+    const flick=.55+.45*Math.random();
+    ctx.globalAlpha=Math.max(0,b.life)*flick;
+    ctx.lineJoin="round"; ctx.lineCap="round";
+    for(let pass=0;pass<2;pass++){
+      ctx.strokeStyle=pass? "#FFFFFF":"#FFE93F";
+      ctx.lineWidth=pass? b.w : b.w*2.8;
+      if(pass) ctx.globalAlpha=Math.max(0,b.life)*flick;
+      else ctx.globalAlpha=Math.max(0,b.life)*.4*flick;
+      ctx.beginPath();
+      b.pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
+      ctx.stroke();
+    }
+  });
+  ctx.globalAlpha=1;
+  FX.bolts = FX.bolts.filter(b=>b.life>0);
+
+  ctx.globalCompositeOperation="lighter";
+
+  /* water arcs — glowing crescents */
+  FX.arcs.forEach(a=>{
+    a.r+=a.vr; a.a0+=a.spin; a.life-=a.decay;
+    const al=Math.max(0,a.life);
+    for(let k=0;k<2;k++){
+      ctx.globalAlpha=al*(k?.35:.9);
+      ctx.strokeStyle=k? "#2E7BF0":"#C9F2FF";
+      ctx.lineWidth=a.w*(k?1.9:1)*a.life;
+      ctx.lineCap="round";
+      ctx.beginPath(); ctx.arc(a.x,a.y,a.r,a.a0,a.a0+a.span); ctx.stroke();
+    }
+  });
+  FX.arcs=FX.arcs.filter(a=>a.life>0);
+  ctx.globalAlpha=1;
+
+  /* particles */
+  FX.parts.forEach(p=>{
+    p.life-=p.decay;
+    if(p.t==="tongue"){
+      p.wob+=.22; p.x+=p.vx+Math.sin(p.wob)*1.1; p.y+=p.vy; p.vy*=.985;
+      p.h*=.985; p.w*=.982;
+      const l=Math.max(0,p.life), pal=p.pal||["255,60,10","255,150,40","255,235,160"];
+      const grad=ctx.createLinearGradient(p.x,p.y,p.x,p.y-p.h);
+      grad.addColorStop(0,`rgba(${pal[0]},${.85*l})`);
+      grad.addColorStop(.55,`rgba(${pal[1]},${.9*l})`);
+      grad.addColorStop(1,`rgba(${pal[2]},${.95*l})`);
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot+Math.sin(p.wob)*.18);
+      ctx.fillStyle=grad;
+      ctx.beginPath();
+      ctx.moveTo(0,-p.h);
+      ctx.quadraticCurveTo(p.w,-p.h*.35,p.w*.5,0);
+      ctx.quadraticCurveTo(p.w*.25,p.h*.18,0,p.h*.14);
+      ctx.quadraticCurveTo(-p.w*.25,p.h*.18,-p.w*.5,0);
+      ctx.quadraticCurveTo(-p.w,-p.h*.35,0,-p.h);
+      ctx.fill(); ctx.restore();
+    }
+    else if(p.t==="ember"){
+      p.seed+=.3; p.x+=p.vx*.9+Math.sin(p.seed)*.7; p.y+=p.vy; p.vy+=p.g;
+      ctx.globalAlpha=Math.max(0,p.life)*(.6+.4*Math.sin(p.seed*2.2));
+      ctx.fillStyle=p.col||"#FFD23F";
+      ctx.beginPath(); ctx.arc(p.x,p.y,Math.max(.4,p.r),0,6.29); ctx.fill();
+    }
+    else if(p.t==="drop"){
+      p.px=p.x; p.py=p.y; p.x+=p.vx; p.y+=p.vy; p.vy+=p.g;
+      ctx.globalAlpha=Math.max(0,p.life);
+      ctx.strokeStyle="#9BEBFF"; ctx.lineWidth=p.r; ctx.lineCap="round";
+      ctx.beginPath(); ctx.moveTo(p.px,p.py); ctx.lineTo(p.x,p.y); ctx.stroke();
+      ctx.fillStyle="#E6F9FF";
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r*.8,0,6.29); ctx.fill();
+    }
+    else if(p.t==="spark"){
+      p.x+=p.vx; p.y+=p.vy; p.vx*=.94; p.vy*=.94; p.vy+=p.g;
+      ctx.globalAlpha=Math.max(0,p.life);
+      ctx.fillStyle=p.col||"#FFF6B0";
+      ctx.beginPath(); ctx.arc(p.x,p.y,Math.max(.4,p.r),0,6.29); ctx.fill();
+    }
+    else if(p.t==="mote"){
+      p.seed+=.04; p.x+=p.vx+Math.sin(p.seed)*.3; p.y+=p.vy;
+      ctx.globalAlpha=Math.max(0,p.life)*(.55+.45*Math.sin(p.seed*3));
+      ctx.fillStyle=p.col;
+      ctx.beginPath(); ctx.arc(p.x,p.y,Math.max(.3,p.r),0,6.29); ctx.fill();
+    }
+    else if(p.t==="wind"){
+      p.ang+=p.av; p.rad=Math.min(54,p.rad+p.radV); p.rise+=p.vy;
+      if(-p.rise>p.maxH) p.life=0;
+      const py=p.cy+p.rise;
+      const al=Math.max(0,p.life);
+      ctx.globalAlpha=al*.85;
+      ctx.strokeStyle="#D8FFE8"; ctx.lineWidth=p.w; ctx.lineCap="round";
+      ctx.beginPath(); ctx.ellipse(p.cx,py,p.rad,p.rad*.3,0,p.ang-.3,p.ang+.3); ctx.stroke();
+      ctx.globalAlpha=al*.4;
+      ctx.strokeStyle="#3FD8A0"; ctx.lineWidth=p.w*1.9;
+      ctx.beginPath(); ctx.ellipse(p.cx,py,p.rad,p.rad*.3,0,p.ang-.26,p.ang+.26); ctx.stroke();
+    }
+    else if(p.t==="leaf"){
+      p.x+=p.vx+Math.sin(p.rot*2)*.6; p.y+=p.vy; p.vy+=p.g; p.rot+=p.vr;
+      ctx.globalAlpha=Math.max(0,p.life)*.9;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+      ctx.fillStyle=p.col||"#7BE8B0";
+      ctx.beginPath(); ctx.ellipse(0,0,p.r,p.r*.5,0,0,6.29); ctx.fill();
+      ctx.restore();
+    }
+    else if(p.t==="rock"){
+      p.x+=p.vx; p.y+=p.vy; p.vy+=p.g; p.rot+=p.vr;
+      ctx.globalAlpha=Math.max(0,p.life);
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+      ctx.fillStyle=p.col;
+      ctx.beginPath();
+      p.verts.forEach((v,i)=>{
+        const px=v[0]*p.r, py=v[1]*p.r;
+        i?ctx.lineTo(px,py):ctx.moveTo(px,py);
+      });
+      ctx.closePath(); ctx.fill(); ctx.restore();
+    }
+    else if(p.t==="bfly"){
+      p.phase+=.35; p.x+=p.vx+Math.sin(p.phase*.28)*.9; p.y+=p.vy;
+      const flap=.25+.75*Math.abs(Math.sin(p.phase));
+      ctx.globalAlpha=Math.max(0,p.life)*.95;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(Math.sin(p.phase*.2)*.4);
+      ctx.fillStyle=p.col;
+      ctx.beginPath(); ctx.ellipse(-p.r*.55,0,p.r*flap,p.r*.66,-.4,0,6.29); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(p.r*.55,0,p.r*flap,p.r*.66,.4,0,6.29); ctx.fill();
+      ctx.restore();
+    }
+    else if(p.t==="mist"){
+      p.x+=p.vx; p.y+=p.vy; p.r+=p.vr;
+      ctx.globalAlpha=p.a*Math.max(0,p.life);
+      ctx.fillStyle=`rgba(${p.col||"235,252,250"},1)`;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,6.29); ctx.fill();
+    }
+    else if(p.t==="note"){
+      p.seed+=.09; p.x+=p.vx+Math.sin(p.seed)*.5; p.y+=p.vy; p.vy+=p.g;
+      ctx.globalAlpha=Math.max(0,p.life);
+      ctx.fillStyle=p.col;
+      ctx.font=`900 ${Math.round(p.r*9)}px serif`;
+      ctx.textAlign="center"; ctx.textBaseline="middle";
+      ctx.fillText(p.glyph,p.x,p.y);
+    }
+    else if(p.t==="heart"){
+      p.seed+=.1; p.x+=p.vx+Math.sin(p.seed)*.6; p.y+=p.vy;
+      const s=p.r;
+      ctx.globalAlpha=Math.max(0,p.life);
+      ctx.fillStyle=p.col;
+      ctx.save(); ctx.translate(p.x,p.y);
+      ctx.beginPath();
+      ctx.moveTo(0,s*.4);
+      ctx.bezierCurveTo(-s*1.15,-s*.4, -s*.45,-s*1.1, 0,-s*.35);
+      ctx.bezierCurveTo(s*.45,-s*1.1, s*1.15,-s*.4, 0,s*.4);
+      ctx.fill(); ctx.restore();
+    }
+    else if(p.t==="snek"){
+      p.t0+=1; p.px=p.x; p.py=p.y;
+      p.x+=p.vx; p.y=p.y0+Math.sin(p.t0*p.fr)*p.amp;
+      ctx.globalAlpha=Math.max(0,p.life);
+      ctx.strokeStyle=p.col; ctx.lineWidth=p.r; ctx.lineCap="round";
+      ctx.beginPath(); ctx.moveTo(p.px,p.py); ctx.lineTo(p.x,p.y); ctx.stroke();
+    }
+    else if(p.t==="saw"){
+      p.x+=p.vx; p.y+=p.vy; p.vy+=p.g; p.rot+=p.vr;
+      ctx.globalAlpha=Math.max(0,p.life);
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+      ctx.fillStyle=p.col;
+      ctx.beginPath();
+      ctx.moveTo(p.r,0); ctx.lineTo(-p.r*.7,p.r*.62); ctx.lineTo(-p.r*.3,0);
+      ctx.lineTo(-p.r*.7,-p.r*.62); ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+  });
+  ctx.globalAlpha=1;
+  ctx.globalCompositeOperation="source-over";
+  FX.parts=FX.parts.filter(p=>p.life>0 && (p.t!=="tongue"||p.h>2));
+
+  if(FX.parts.length||FX.rings.length||FX.arcs.length||FX.flashes.length||FX.bolts.length){
+    requestAnimationFrame(fxLoop);
+  }else{ FX.running=false; ctx.clearRect(0,0,cv.width,cv.height); }
+}
+/* every interactive press triggers a random breathing style */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("button,.kcard,.prow,.slot,.reveal-card,.drop-caps,.bnav,.chip");
+  if(t){ sfx("click"); fxBurst(e.clientX,e.clientY,false); }
+});
+function fxBurstAt(el,big,style){
+  if(!el) return;
+  const r = el.getBoundingClientRect();
+  fxBurst(r.left+r.width/2, r.top+r.height/2, big, style);
+}
+/* kanji flash — the anime signature */
+function kanjiFlash(main, sub, cls){
+  const el=$("#kfx");
+  el.className="kfx show "+(cls||"fx-gold");
+  el.innerHTML=`<span class="kfx-main">${main}</span>${sub?`<span class="kfx-sub">${sub}</span>`:""}`;
+  clearTimeout(kfxT);
+  kfxT=setTimeout(()=>el.classList.remove("show"),1050);
+}
+function uiShake(){
+  if(SETTINGS.fx==="off"||SETTINGS.motion==="reduced") return;
+  document.body.classList.remove("shake");
+  void document.body.offsetWidth;
+  document.body.classList.add("shake");
+  setTimeout(()=>document.body.classList.remove("shake"),340);
+}
+
+/* ---------------- CURSOR TRAIL — breathing style follows the mouse ---------------- */
+let trailStyle = FX_STYLES[Math.floor(Math.random()*FX_STYLES.length)];
+setInterval(()=>{ trailStyle = randFx(); }, 3500);   /* rotate style every few seconds */
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let lastTX = -99, lastTY = -99;
+document.addEventListener("pointermove", e=>{
+  if(reducedMotion || SETTINGS.fx==="off" || SETTINGS.motion==="reduced") return;
+  const dx = e.clientX-lastTX, dy = e.clientY-lastTY;
+  if(dx*dx+dy*dy < (SETTINGS.fx==="lite"?520:170)) return;          /* spawn every ~13px of movement */
+  lastTX = e.clientX; lastTY = e.clientY;
+  const x = e.clientX, y = e.clientY;
+  const S = trailStyle;
+  if(S==="flame") FX.parts.push({t:"ember", x:x+R(-3,3), y:y+R(-3,3), vx:R(-.5,.5), vy:R(-2,-.8), g:-.02, r:R(.9,1.9), col:"#FFD23F", life:.8, decay:R(.03,.045), seed:R(0,6.28)});
+  else if(S==="sun") FX.parts.push({t:"ember", x:x+R(-3,3), y:y+R(-3,3), vx:R(-.5,.5), vy:R(-2,-.8), g:-.02, r:R(.9,1.9), col:"#FF6E4D", life:.8, decay:R(.03,.045), seed:R(0,6.28)});
+  else if(S==="water") FX.parts.push({t:"drop", x, y, px:x, py:y, vx:R(-.8,.8), vy:R(-.4,.6), g:.07, r:R(1,2), life:.75, decay:R(.035,.05)});
+  else if(S==="thunder") FX.parts.push({t:"spark", x, y, vx:R(-1.4,1.4), vy:R(-1.4,1.4), g:.01, r:R(.7,1.5), life:.6, decay:R(.05,.08)});
+  else if(S==="wind") FX.parts.push({t:"leaf", x, y, vx:R(-.9,.9), vy:R(-.9,.4), g:.03, rot:R(0,6.28), vr:R(-.18,.18), r:R(1.6,2.8), col:"#7BE8B0", life:.85, decay:R(.03,.045)});
+  else if(S==="stone") FX.parts.push({t:"spark", x, y, vx:R(-.8,.8), vy:R(-.6,.2), g:.06, r:R(.8,1.5), col:"#C9B8A8", life:.7, decay:R(.04,.06)});
+  else if(S==="insect") FX.parts.push({t:"leaf", x, y, vx:R(-.7,.7), vy:R(-.8,.2), g:.02, rot:R(0,6.28), vr:R(-.2,.2), r:R(1.6,2.6), col:"#D8B4FF", life:.85, decay:R(.03,.045)});
+  else if(S==="flower") FX.parts.push({t:"leaf", x, y, vx:R(-.8,.8), vy:R(-.9,.3), g:.025, rot:R(0,6.28), vr:R(-.2,.2), r:R(1.8,2.8), col:"#FFB8D9", life:.85, decay:R(.03,.045)});
+  else if(S==="mist") FX.parts.push({t:"mist", x, y, vx:R(-.3,.3), vy:R(-.3,-.05), r:R(5,9), vr:R(.2,.4), a:R(.08,.12), col:"235,252,250", life:.8, decay:R(.02,.03)});
+  else if(S==="sound") FX.parts.push({t:"note", x, y, vx:R(-.6,.6), vy:R(-1.4,-.7), g:-.004, glyph:pick(["♪","♫"]), col:"#FFD76E", r:R(.8,1.2), seed:R(0,6.28), life:.8, decay:R(.03,.045)});
+  else if(S==="love") FX.parts.push({t:"heart", x, y, vx:R(-.5,.5), vy:R(-1.5,-.8), seed:R(0,6.28), r:R(2.6,4), col:pick(["#FF9FC0","#FF6FA5"]), life:.8, decay:R(.03,.045)});
+  else if(S==="serpent") FX.parts.push({t:"snek", x, y, y0:y, px:x, py:y, vx:(Math.random()<.5?-1:1)*R(1.2,2), t0:R(0,6.28), amp:R(4,8), fr:R(.2,.3), col:"#C8B8FF", r:R(1.2,1.8), life:.6, decay:R(.035,.05)});
+  else FX.parts.push({t:"spark", x, y, vx:R(-1.2,1.2), vy:R(-1.2,1), g:.04, r:R(.8,1.5), col:"#8FF0E4", life:.7, decay:R(.04,.06)});
+  if(!FX.running){ FX.running=true; requestAnimationFrame(fxLoop); }
+}, {passive:true});
+
+/* ---------------- THEME: manga ink ↔ anime dark ---------------- */
+let theme = "anime";
+try{ theme = localStorage.getItem("kuji_theme_v2") || "anime"; }catch(e){}
+function applyTheme(){
+  document.body.classList.toggle("theme-manga", theme==="manga");
+  const b = $("#themeBtn");
+  if(b){ b.textContent = theme==="manga" ? "📖" : "✨";
+    b.title = theme==="manga" ? "マンガ風 · tap for anime dark" : "アニメ風 · tap for manga ink"; }
+}
+function toggleTheme(){
+  theme = theme==="manga" ? "anime" : "manga";
+  try{ localStorage.setItem("kuji_theme_v2", theme); }catch(e){}
+  applyTheme();
+  toast(theme==="manga" ? "マンガモード 📖" : "アニメモード ✨");
+}
+
+/* ambient glowing motes — floating sparks like the movie poster */
+if(!reducedMotion){
+  setInterval(()=>{
+    if(document.hidden || SETTINGS.fx!=="full" || SETTINGS.motion==="reduced") return;
+    FX.parts.push({t:"mote",
+      x:R(0,innerWidth), y:R(innerHeight*.5, innerHeight+10),
+      vx:R(-.15,.15), vy:R(-.55,-.25),
+      r:R(1,2.6), col:pick(["#9BEBFF","#7FD8FF","#FFE9A0"]),
+      seed:R(0,6.28), life:1, decay:R(.0025,.0045)});
+    if(!FX.running){ FX.running=true; requestAnimationFrame(fxLoop); }
+  }, 300);
+}
+
+/* ---------------- SETTINGS (menu ⚙) ---------------- */
+const SETTINGS = { fx:"full", sound:true, motion:"standard" };
+try{
+  SETTINGS.fx = localStorage.getItem("kuji_fxlevel") || "full";
+  SETTINGS.sound = (localStorage.getItem("kuji_sound") || "on") === "on";
+  SETTINGS.motion = localStorage.getItem("kuji_motion") || "standard";
+}catch(e){}
+function saveSettings(){
+  try{
+    localStorage.setItem("kuji_fxlevel", SETTINGS.fx);
+    localStorage.setItem("kuji_sound", SETTINGS.sound ? "on" : "off");
+    localStorage.setItem("kuji_motion", SETTINGS.motion);
+  }catch(e){}
+}
+function applyMotion(){
+  document.body.classList.toggle("reduce-motion", SETTINGS.motion==="reduced");
+}
+
+/* ---------------- SOUND ENGINE (WebAudio, no assets) ---------------- */
+let AC = null;
+function sfx(kind){
+  if(!SETTINGS.sound) return;
+  try{
+    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
+    if(AC.state==="suspended") AC.resume();
+  }catch(e){ return; }
+  const t0 = AC.currentTime;
+  const note=(f,t,d,type,v)=>{
+    const o=AC.createOscillator(), g=AC.createGain();
+    o.type=type||"triangle"; o.frequency.setValueAtTime(f,t0+t);
+    g.gain.setValueAtTime(0,t0+t);
+    g.gain.linearRampToValueAtTime(v||.07,t0+t+.012);
+    g.gain.exponentialRampToValueAtTime(.0001,t0+t+d);
+    o.connect(g); g.connect(AC.destination);
+    o.start(t0+t); o.stop(t0+t+d+.02);
+  };
+  if(kind==="click"){ note(760,0,.07,"triangle",.045); }
+  else if(kind==="flip"){ note(420,0,.09,"sine",.06); note(840,.06,.1,"sine",.05); }
+  else if(kind==="win"){ [523,659,784].forEach((f,i)=>note(f,i*.07,.16,"triangle",.07)); }
+  else if(kind==="rare"){ [523,659,784,1046,1318].forEach((f,i)=>note(f,i*.06,.22,"triangle",.08)); }
+  else if(kind==="spin"){ note(300,0,.12,"sawtooth",.028); note(500,.1,.12,"sawtooth",.028); }
+}
+
+/* ---------------- MENU ☰ & SETTINGS ⚙ ---------------- */
+function openMenu(){
+  $("#overlay").classList.add("open");
+  $("#menuDrawer").classList.add("open");
+  lockScroll(true);
+}
+function openSettings(){
+  $("#menuDrawer").classList.remove("open");
+  modalShell(settingsHTML());
+}
+function settingsHTML(){
+  const on=(cur,val)=>cur===val?"on":"";
+  return `<div class="modal-head">
+    <button class="m-close" onclick="closeModal()" aria-label="Close">✕</button>
+    <div class="m-kicker">SETTINGS</div><h3>設定 ⚙️</h3>
+    <div class="m-sub">Everything applies instantly and is remembered</div>
+  </div>
+  <div class="modal-body">
+    <div class="set-label">主題 · THEME</div>
+    <div class="set-row">
+      <button class="set-opt ${on(theme,"anime")}" onclick="setThemeOpt('anime')">✨ 動漫暗黑<br><small>無限城 Anime</small></button>
+      <button class="set-opt ${on(theme,"manga")}" onclick="setThemeOpt('manga')">📖 漫畫手稿<br><small>Manga Ink</small></button>
+    </div>
+    <div class="set-label">特效強度 · EFFECTS</div>
+    <div class="set-row">
+      <button class="set-opt ${on(SETTINGS.fx,"full")}" onclick="setFxLevel('full')">🔥 全開<br><small>Full</small></button>
+      <button class="set-opt ${on(SETTINGS.fx,"lite")}" onclick="setFxLevel('lite')">🍃 輕量<br><small>Lite</small></button>
+      <button class="set-opt ${on(SETTINGS.fx,"off")}" onclick="setFxLevel('off')">⛔ 關閉<br><small>Off</small></button>
+    </div>
+    <div class="set-label">音效 · SOUND</div>
+    <div class="set-row">
+      <button class="set-opt ${SETTINGS.sound?"on":""}" onclick="setSound(true)">🔊 開啟<br><small>On</small></button>
+      <button class="set-opt ${SETTINGS.sound?"":"on"}" onclick="setSound(false)">🔇 靜音<br><small>Muted</small></button>
+    </div>
+    <div class="set-label">動態 · MOTION</div>
+    <div class="set-row">
+      <button class="set-opt ${on(SETTINGS.motion,"standard")}" onclick="setMotion('standard')">✨ 標準<br><small>Standard</small></button>
+      <button class="set-opt ${on(SETTINGS.motion,"reduced")}" onclick="setMotion('reduced')">🧘 減少<br><small>Reduced</small></button>
+    </div>
+    <button class="btn-ghost-line" style="margin-top:18px" onclick="resetDemo();closeModal()">🔄 Reset demo data</button>
+    <p class="fine-print">KUJIGACHA · KUJI CLUB — 無限城 Edition v1.0</p>
+  </div>`;
+}
+function refreshSettings(){ const el=$("#modal"); if(el) el.innerHTML=settingsHTML(); }
+function setThemeOpt(t){ if(t!==theme) toggleTheme(); refreshSettings(); }
+function setFxLevel(l){
+  SETTINGS.fx=l; saveSettings(); refreshSettings();
+  toast(l==="full"?"特效全開 🔥":l==="lite"?"輕量特效 🍃":"特效已關閉");
+  if(l!=="off") fxBurst(innerWidth/2, innerHeight*0.42, l==="full");
+}
+function setSound(v){ SETTINGS.sound=v; saveSettings(); refreshSettings(); if(v) sfx("win"); }
+function setMotion(m){ SETTINGS.motion=m; saveSettings(); applyMotion(); refreshSettings(); }
+function howToPlay(){
+  $("#menuDrawer").classList.remove("open");
+  modalShell(`<div class="modal-head">
+    <button class="m-close" onclick="closeModal()" aria-label="Close">✕</button>
+    <div class="m-kicker">HOW TO PLAY</div><h3>點玩？🎫</h3>
+    <div class="m-sub">Three steps to your prize</div></div>
+  <div class="modal-body">
+    <div class="htp"><b>① Pick a box</b><p>Every box shows exactly which prizes remain — the pool only shrinks as people draw.</p></div>
+    <div class="htp"><b>② Pick your tickets</b><p>Tap your lucky numbers on the board, or hit 🎲 Lucky Dip. Every ticket wins something.</p></div>
+    <div class="htp"><b>③ Reveal &amp; keep</b><p>Flip your tickets to reveal prizes. Buy the LAST ticket of a box to claim the Last One prize.</p></div>
+    <button class="big-cta block" style="margin-top:14px" onclick="closeModal();go('#/')">START ◆</button>
+  </div>`);
+}
+
+/* ---------------- INIT ---------------- */
+applyMotion();
+applyTheme();
+route();
+
+// Live data snapshot from kuji-test-ming.fly.dev/api/v1/boxes (2026-10-06)
+window.KUJI_DATA=[{"id":"8f503ab0-c128-4a56-ba48-9fcf041cfc8a","name":"Naruto \u00b7 Hidden Leaf","type":"kuji","art":"naruto","price":11.0,"currency":"SGD","total":80,"remaining":33,"tiers":[{"label":"A","remaining":0},{"label":"B","remaining":1},{"label":"C","remaining":3},{"label":"D","remaining":7},{"label":"E","remaining":5},{"label":"F","remaining":17}],"lastOne":true,"lastOneLive":true,"slots":[22,31,36,37,38,41,42,43,46,47,48,49,50,51,52,53,54,55,58,59,60,65,70,71,72,73,74,75,76,77,78,79,80]},{"id":"90f4755c-f4c7-45c3-b298-73feb91b2c9f","name":"Demon Slayer \u00b7 Dawn Patrol","type":"kuji","art":"demon-slayer","price":13.0,"currency":"SGD","total":80,"remaining":66,"tiers":[{"label":"A","remaining":1},{"label":"B","remaining":2},{"label":"C","remaining":5},{"label":"D","remaining":9},{"label":"E","remaining":13},{"label":"F","remaining":36}],"lastOne":true,"lastOneLive":true,"slots":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,19,20,21,22,23,24,28,29,30,31,32,33,34,35,38,39,40,41,42,43,44,46,47,48,49,50,51,52,55,56,57,59,60,61,62,65,66,67,69,70,71,72,73,74,75,76,77,79,80]},{"id":"9b1d2963-3785-4fe6-8002-053137b46b1e","name":"Jujutsu Kaisen \u00b7 Cursed Energy","type":"kuji","art":"jujutsu-kaisen","price":14.0,"currency":"SGD","total":80,"remaining":79,"tiers":[{"label":"A","remaining":0},{"label":"B","remaining":2},{"label":"C","remaining":5},{"label":"D","remaining":12},{"label":"E","remaining":20},{"label":"F","remaining":40}],"lastOne":true,"lastOneLive":true,"slots":[1,2,3,4,5,6,7,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80]},{"id":"7ea52fcc-58d4-40ae-ae8b-344655122560","name":"Dragon Ball \u00b7 Super Saiyans","type":"kuji","art":"dragon-ball","price":12.0,"currency":"SGD","total":80,"remaining":59,"tiers":[{"label":"A","remaining":1},{"label":"B","remaining":1},{"label":"C","remaining":4},{"label":"D","remaining":8},{"label":"E","remaining":12},{"label":"F","remaining":33}],"lastOne":true,"lastOneLive":true,"slots":[2,3,5,6,7,13,14,15,17,18,19,20,21,23,24,25,26,27,28,29,30,32,33,34,35,36,37,39,40,41,43,45,46,47,48,49,50,51,52,53,54,55,60,61,62,63,64,65,66,67,68,69,70,71,76,77,78,79,80]},{"id":"5d85ec3c-9200-46fc-bbd0-15ad6bafcec9","name":"Spy \u00d7 Family \u00b7 Secret Mission","type":"kuji","art":"spy-x-family","price":10.0,"currency":"SGD","total":80,"remaining":70,"tiers":[{"label":"A","remaining":1},{"label":"B","remaining":2},{"label":"C","remaining":5},{"label":"D","remaining":9},{"label":"E","remaining":17},{"label":"F","remaining":36}],"lastOne":true,"lastOneLive":true,"slots":[2,4,5,6,7,8,9,13,14,15,16,17,18,19,20,22,24,25,26,27,28,29,30,32,33,34,35,36,37,38,39,40,41,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,73,74,75,76,77,78,79,80]},{"id":"02593bfe-da77-47bc-a7f7-475aa6ec4362","name":"Pocket Cats","type":"gacha","art":"pocket-cats","price":6.0,"currency":"SGD","total":48,"remaining":38,"tiers":[{"label":"Collection","remaining":38}],"lastOne":false,"lastOneLive":false,"slots":[1,3,4,6,7,8,9,10,12,13,14,17,18,19,22,23,24,25,26,27,28,29,30,32,33,34,35,36,37,38,39,40,42,43,44,45,46,48]},{"id":"e9166bf1-f5b6-417b-aa86-a1824c3e520f","name":"Tiny Garden","type":"gacha","art":"tiny-garden","price":5.0,"currency":"SGD","total":48,"remaining":46,"tiers":[{"label":"Collection","remaining":46}],"lastOne":false,"lastOneLive":false,"slots":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,21,22,23,24,25,26,27,28,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48]},{"id":"3e3d690a-1cb0-4fb7-b920-4390b4039a43","name":"Moon Bunnies","type":"gacha","art":"moon-bunnies","price":7.0,"currency":"SGD","total":48,"remaining":42,"tiers":[{"label":"Collection","remaining":42}],"lastOne":false,"lastOneLive":false,"slots":[1,2,3,4,5,6,7,8,9,10,12,13,14,15,16,17,18,19,21,22,23,24,25,26,27,28,29,30,31,32,33,34,37,39,40,41,42,43,44,46,47,48]}];
